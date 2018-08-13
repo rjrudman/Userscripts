@@ -16474,7 +16474,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     $('.user-tab-sorts a').removeClass('youarehere');
                     $(detailedLink).addClass('youarehere');
                     RenderDetailedReputation(45);
-                    var numSecondsInput_1 = $('<input type="number" value="60" />');
+                    var numSecondsInput_1 = $('<input type="number" value="45" />');
                     $('#stats').prepend(numSecondsInput_1);
                     $('#stats').prepend('<label style="margin-right: 15px">Set number of seconds between votes</label>');
                     numSecondsInput_1.change(function () {
@@ -16495,48 +16495,107 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     var requestEndpoint = "https://api.stackexchange.com/2.2/users/" + userId + "/reputation-history?pagesize=100&site=stackoverflow";
                     apiData = fetch(requestEndpoint).then(function (r) { return r.json(); });
                 }
-                if (votesDataPromise == null) {
-                    var votesPage = "/admin/show-user-votes/" + userId;
-                    votesDataPromise = fetch(votesPage).then(function (r) { return r.text(); });
-                }
                 var highlightedRows = [];
                 var rowsById = [];
                 apiData.then(function (data) {
                     var buckets = ReputationAnalyser_1.ProcessItems(data.items, secondsGap);
                     var acceptableBuckets = buckets.filter(function (b) { return b.length >= 3; });
                     var newTable = $("\n                    <table class=\"detailed_reputation_table\">\n                        <tbody id=\"detailed_reputation_body\">\n                        </tbody>\n                    </table>\n                    ");
+                    var deletionTypes = ['user_deleted', 'vote_fraud_reversal'];
                     var deletionEvents = data.items.filter(function (s) { return s.reputation_history_type === 'user_deleted'; });
-                    var automaticallyReversed = data.items.filter(function (s) { return s.reputation_history_type === 'vote_fraud_reversal'; });
+                    var automaticallyReversed = data.items.filter(function (s) {
+                        var date = moment.unix(s.creation_date).utc();
+                        if (s.reputation_history_type === 'vote_fraud_reversal') {
+                            if (date.minute() === 0 && date.hour() === 3) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+                    var manuallyReversed = data.items.filter(function (s) {
+                        var date = moment.unix(s.creation_date).utc();
+                        if (s.reputation_history_type === 'vote_fraud_reversal') {
+                            if (date.minute() !== 0 || date.hour() !== 3) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+                    if (deletionEvents.length && votesDataPromise == null) {
+                        var votesPage = "/admin/show-user-votes/" + userId;
+                        votesDataPromise = fetch(votesPage).then(function (r) { return r.text(); });
+                    }
                     var tableBody = newTable.find('#detailed_reputation_body');
                     data.items.forEach(function (row) {
                         var typedRow = row;
                         var bucket = typedRow.bucket;
                         var bucketIndex = acceptableBuckets.indexOf(bucket);
-                        var htmlRow = $("\n                    <tr>\n                        <td>" + moment.unix(row.creation_date).format('YYYY-MM-DD HH:mm:ss') + "</td>\n                        <td>" + row.reputation_history_type + "</td>\n                        <td>" + row.reputation_change + "</td>\n                        <td class=\"post-col\"><a href=\"/q/" + row.post_id + "\">" + row.post_id + "</a><a class=\"post-matcher\" href=\"javascript:void()\">\uD83D\uDCCC</a></td>\n                        <td class=\"user-deleted\"></td>\n                        <td class=\"automatically-reversed\"></td>\n                        <td class=\"cm-reversed\"></td>\n                    </tr>\n                    ");
+                        var htmlRow = $("\n                    <tr>\n                        <td>" + moment.unix(row.creation_date).format('YYYY-MM-DD HH:mm:ss') + "</td>\n                        <td>" + row.reputation_history_type + "</td>\n                        <td>" + row.reputation_change + "</td>\n                        <td class=\"post-col\"><a href=\"/q/" + row.post_id + "\">" + row.post_id + "</a><a class=\"post-matcher\" href=\"javascript:void(0);\">\uD83D\uDCCC</a></td>\n                        <td class=\"user-deleted\"></td>\n                        <td class=\"automatically-reversed\"></td>\n                        <td class=\"cm-reversed\"></td>\n                    </tr>\n                    ");
                         if (typedRow.reputation_history_type === 'association_bonus') {
                             htmlRow.find('.post-col').empty();
                         }
                         if (typedRow.canIgnore) {
                             htmlRow.css('text-decoration', 'line-through');
                         }
-                        htmlRow.find('.post-matcher')
+                        function unsetHighlightedRows() {
+                            highlightedRows.forEach(function (r) { return r.removeClass('detailed_reputation_table_highlighted'); });
+                            highlightedRows = [];
+                        }
+                        function setHighlightedRows(postId) {
+                            highlightedRows.forEach(function (r) { return r.removeClass('detailed_reputation_table_highlighted'); });
+                            highlightedRows = rowsById[postId];
+                            highlightedRows.forEach(function (r) { return r.addClass('detailed_reputation_table_highlighted'); });
+                        }
+                        var postMatcher = htmlRow.find('.post-matcher');
+                        var setOnHover = false;
+                        postMatcher
                             .click(function () {
-                            if (htmlRow.hasClass('detailed_reputation_table_highlighted')) {
-                                highlightedRows.forEach(function (r) { return r.removeClass('detailed_reputation_table_highlighted'); });
-                                highlightedRows = [];
+                            if (!setOnHover && htmlRow.hasClass('detailed_reputation_table_highlighted')) {
+                                unsetHighlightedRows();
                             }
                             else {
-                                highlightedRows.forEach(function (r) { return r.removeClass('detailed_reputation_table_highlighted'); });
-                                highlightedRows = rowsById[row.post_id];
-                                highlightedRows.forEach(function (r) { return r.addClass('detailed_reputation_table_highlighted'); });
+                                setHighlightedRows(row.post_id);
+                                setOnHover = false;
+                            }
+                        });
+                        var postCol = htmlRow.find('.post-col');
+                        postCol.mouseenter(function () {
+                            if (!highlightedRows.length) {
+                                setOnHover = true;
+                                setHighlightedRows(row.post_id);
+                            }
+                        });
+                        postCol.mouseleave(function () {
+                            if (setOnHover) {
+                                unsetHighlightedRows();
+                                setOnHover = false;
                             }
                         });
                         if (bucketIndex > -1) {
                             var bucketColour = getBucketColour(bucketIndex, acceptableBuckets.length);
                             if (typedRow.firstInBucket) {
-                                var bucketHeader = $("\n                            <tr class=\"detailed_reputation_table_header\">\n                                <td colspan=\"7\">\n                                    Group " + String.fromCharCode(65 + bucketIndex) + "\n                                    (" + bucket.filter(function (b) { return !b.canIgnore; }).length + " events (" + bucket.length + " total), " + bucket.reduce(function (p, c) { return p + c.reputation_change; }, 0) + " reputation)\n                                    (" + bucket.reduce(function (p, c) { return p + (deletionEvents.find(function (i) { return i.post_id === c.post_id; }) == null ? 0 : 1); }, 0) + " UD)\n                                    (" + bucket.reduce(function (p, c) { return p + (automaticallyReversed.find(function (i) { return i.post_id === c.post_id && (i.creation_date - typedRow.creation_date <= 60 * 60 * 24); }) == null ? 0 : 1); }, 0) + " AR)\n                                </td>\n                            </tr>\n                            ");
-                                bucketHeader.css('background-color', bucketColour);
-                                tableBody.append(bucketHeader);
+                                if (deletionTypes.indexOf(typedRow.reputation_history_type) >= 0) {
+                                    var bucketHeader_1 = $("\n                                <tr class=\"detailed_reputation_table_header\">\n                                    <td colspan=\"7\">\n                                        Group " + String.fromCharCode(65 + bucketIndex) + "\n                                        (" + bucket.length + " events, " + bucket.reduce(function (p, c) { return p + c.reputation_change; }, 0) + " reputation)\n                                    </td>\n                                </tr>\n                                ");
+                                    bucketHeader_1.css('background-color', bucketColour);
+                                    tableBody.append(bucketHeader_1);
+                                    if (votesDataPromise) {
+                                        votesDataPromise.then(function (votesData) {
+                                            var userInfo = $('.voters.sorter:eq(2)', votesData).find('[title="2018-08-13 01:35:35Z"]').closest('tr').find('.user-info');
+                                            var gravatar = userInfo.find('.gravatar-wrapper-32');
+                                            var userLink = userInfo.find('.user-details > a');
+                                            var cell = bucketHeader_1.find('td');
+                                            cell.append(gravatar.css('display', 'inline-block'));
+                                            cell.append(userLink);
+                                        });
+                                    }
+                                    bucketHeader_1.css('background-color', bucketColour);
+                                    tableBody.append(bucketHeader_1);
+                                }
+                                else {
+                                    var bucketHeader = $("\n                            <tr class=\"detailed_reputation_table_header\">\n                                <td colspan=\"7\">\n                                    Group " + String.fromCharCode(65 + bucketIndex) + "\n                                    (" + bucket.filter(function (b) { return !b.canIgnore; }).length + " events (" + bucket.length + " total), " + bucket.reduce(function (p, c) { return p + c.reputation_change; }, 0) + " reputation)\n                                    (" + bucket.reduce(function (p, c) { return p + (deletionEvents.find(function (i) { return i.post_id === c.post_id; }) == null ? 0 : 1); }, 0) + " UD)\n                                    (" + bucket.reduce(function (p, c) { return p + (automaticallyReversed.find(function (i) { return i.post_id === c.post_id && (i.creation_date - typedRow.creation_date <= 60 * 60 * 24); }) == null ? 0 : 1); }, 0) + " AR)\n                                    (" + bucket.reduce(function (p, c) { return p + (manuallyReversed.find(function (i) { return i.post_id === c.post_id; }) == null ? 0 : 1); }, 0) + " MR)\n                                </td>\n                            </tr>\n                            ");
+                                    bucketHeader.css('background-color', bucketColour);
+                                    tableBody.append(bucketHeader);
+                                }
                             }
                             htmlRow.css('background-color', bucketColour);
                             if (deletionEvents.find(function (i) { return i.post_id === typedRow.post_id; })) {
@@ -16546,6 +16605,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 // Automatic reversals will only apply to votes cast within the last 24 hours
                                 && (i.creation_date - typedRow.creation_date <= 60 * 60 * 24); })) {
                                 htmlRow.find('.user-deleted').text('AR');
+                            }
+                            if (manuallyReversed.find(function (i) { return i.post_id === typedRow.post_id; })) {
+                                htmlRow.find('.user-deleted').text('MR');
                             }
                         }
                         tableBody.append(htmlRow);
