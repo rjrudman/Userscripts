@@ -16498,12 +16498,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 var highlightedRows = [];
                 var rowsById = [];
                 apiData.then(function (data) {
-                    var buckets = ReputationAnalyser_1.ProcessItems(data.items, secondsGap);
+                    var copiedData = JSON.parse(JSON.stringify(data));
+                    var buckets = ReputationAnalyser_1.ProcessItems(copiedData.items, secondsGap);
                     var acceptableBuckets = buckets.filter(function (b) { return b.length >= 3; });
                     var newTable = $("\n                    <table class=\"detailed_reputation_table\">\n                        <tbody id=\"detailed_reputation_body\">\n                        </tbody>\n                    </table>\n                    ");
                     var deletionTypes = ['user_deleted', 'vote_fraud_reversal'];
-                    var deletionEvents = data.items.filter(function (s) { return s.reputation_history_type === 'user_deleted'; });
-                    var automaticallyReversed = data.items.filter(function (s) {
+                    var deletionEvents = copiedData.items.filter(function (s) { return s.reputation_history_type === 'user_deleted'; });
+                    var automaticallyReversed = copiedData.items.filter(function (s) {
                         var date = moment.unix(s.creation_date).utc();
                         if (s.reputation_history_type === 'vote_fraud_reversal') {
                             if (date.minute() === 0 && date.hour() === 3) {
@@ -16512,7 +16513,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         }
                         return false;
                     });
-                    var manuallyReversed = data.items.filter(function (s) {
+                    var manuallyReversed = copiedData.items.filter(function (s) {
                         var date = moment.unix(s.creation_date).utc();
                         if (s.reputation_history_type === 'vote_fraud_reversal') {
                             if (date.minute() !== 0 || date.hour() !== 3) {
@@ -16526,7 +16527,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         votesDataPromise = fetch(votesPage).then(function (r) { return r.text(); });
                     }
                     var tableBody = newTable.find('#detailed_reputation_body');
-                    data.items.forEach(function (row) {
+                    copiedData.items.forEach(function (row) {
                         var typedRow = row;
                         var bucket = typedRow.bucket;
                         var bucketIndex = acceptableBuckets.indexOf(bucket);

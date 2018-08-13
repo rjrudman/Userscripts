@@ -98,7 +98,8 @@ $(() => {
             const rowsById: JQuery[][] = [];
 
             apiData.then(data => {
-                const buckets = ProcessItems(data.items, secondsGap);
+                const copiedData = JSON.parse(JSON.stringify(data)) as ApiResponse;
+                const buckets = ProcessItems(copiedData.items, secondsGap);
                 const acceptableBuckets = buckets.filter(b => b.length >= 3);
 
                 const newTable = $(`
@@ -109,8 +110,8 @@ $(() => {
                     `);
 
                 const deletionTypes = ['user_deleted', 'vote_fraud_reversal'];
-                const deletionEvents = data.items.filter(s => s.reputation_history_type === 'user_deleted');
-                const automaticallyReversed = data.items.filter(s => {
+                const deletionEvents = copiedData.items.filter(s => s.reputation_history_type === 'user_deleted');
+                const automaticallyReversed = copiedData.items.filter(s => {
                     const date = moment.unix(s.creation_date).utc();
                     if (s.reputation_history_type === 'vote_fraud_reversal') {
                         if (date.minute() === 0 && date.hour() === 3) {
@@ -119,7 +120,7 @@ $(() => {
                     }
                     return false;
                 });
-                const manuallyReversed = data.items.filter(s => {
+                const manuallyReversed = copiedData.items.filter(s => {
                     const date = moment.unix(s.creation_date).utc();
                     if (s.reputation_history_type === 'vote_fraud_reversal') {
                         if (date.minute() !== 0 || date.hour() !== 3) {
@@ -135,7 +136,7 @@ $(() => {
                 }
 
                 const tableBody = newTable.find('#detailed_reputation_body');
-                data.items.forEach(row => {
+                copiedData.items.forEach(row => {
                     const typedRow = row as ReputationEventDetails;
                     const bucket = typedRow.bucket;
                     const bucketIndex = acceptableBuckets.indexOf(bucket);
