@@ -76,10 +76,12 @@ $(() => {
                 RenderDetailedReputation(45, 3, false);
 
                 const showVoters = $('<input type="checkbox" id="chkShowReversedUser">');
+                const showVotersLabel = $('<label for="chkShowReversedUser" style="margin-right: 15px; margin-left: 15px;">Show reversed user</label>');
                 $('#stats').prepend(showVoters);
-                $('#stats').prepend('<label for="chkShowReversedUser" style="margin-right: 15px; margin-left: 15px;">Show reversed user</label>');
+                $('#stats').prepend(showVotersLabel);
                 if (!StackExchange.options.user.isModerator) {
                     showVoters.hide();
+                    showVotersLabel.hide();
                 }
 
                 const bucketSizeInput = $('<input type="number" value="3" />');

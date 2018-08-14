@@ -16474,10 +16474,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     $(detailedLink).addClass('youarehere');
                     RenderDetailedReputation(45, 3, false);
                     var showVoters_1 = $('<input type="checkbox" id="chkShowReversedUser">');
+                    var showVotersLabel = $('<label for="chkShowReversedUser" style="margin-right: 15px; margin-left: 15px;">Show reversed user</label>');
                     $('#stats').prepend(showVoters_1);
-                    $('#stats').prepend('<label for="chkShowReversedUser" style="margin-right: 15px; margin-left: 15px;">Show reversed user</label>');
+                    $('#stats').prepend(showVotersLabel);
                     if (!StackExchange.options.user.isModerator) {
                         showVoters_1.hide();
+                        showVotersLabel.hide();
                     }
                     var bucketSizeInput_1 = $('<input type="number" value="3" />');
                     $('#stats').prepend(bucketSizeInput_1);
