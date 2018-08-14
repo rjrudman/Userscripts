@@ -361,11 +361,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 totalVotes++;
                                 totalVotesReversed += partialVoteReversed;
                                 totalReptuationReversed += actualReputationChange * (partialVoteReversed);
-                                if (partialVoteReversed > 0) {
-                                    rowReversalTypes.push('❌');
+                                if (partialVoteReversed === 1) {
+                                    rowReversalTypes.unshift('❌');
                                 }
-                                else {
-                                    rowReversalTypes.push('✅');
+                                else if (partialVoteReversed < 0) {
+                                    rowReversalTypes.unshift('✅');
                                 }
                                 htmlRow.find('.reversal-type').text(rowReversalTypes.join(' '));
                             }

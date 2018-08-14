@@ -409,10 +409,10 @@ $(() => {
                             totalVotesReversed += partialVoteReversed;
                             totalReptuationReversed += actualReputationChange * (partialVoteReversed);
 
-                            if (partialVoteReversed > 0) {
-                                rowReversalTypes.push('❌');
-                            } else {
-                                rowReversalTypes.push('✅');
+                            if (partialVoteReversed === 1) {
+                                rowReversalTypes.unshift('❌');
+                            } else if (partialVoteReversed < 0) {
+                                rowReversalTypes.unshift('✅');
                             }
 
                             htmlRow.find('.reversal-type').text(rowReversalTypes.join(' '));
