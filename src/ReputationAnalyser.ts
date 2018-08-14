@@ -7,7 +7,8 @@ export type ReputationEventDetails = ReputationEvent & {
     canIgnore?: boolean; // For example, upvote/unupvote at the same time
 };
 
-const groupableEventTypes = ['post_upvoted', 'post_unupvoted', 'post_downvoted', 'post_undownvoted', 'user_deleted', 'vote_fraud_reversal'];
+const groupableEventTypes = ['post_upvoted', 'post_unupvoted', 'post_downvoted', 'post_undownvoted', 'user_deleted', 'vote_fraud_reversal',
+    'asker_unaccept_answer', 'asker_accepts_answer'];
 
 function SortItems(items: ReputationEvent[]) {
     items.sort((a, b) => {
@@ -72,6 +73,8 @@ export function ProcessIntoBuckets(items: ReputationEvent[], secondsGap: number)
                 ['post_unupvoted', 'post_upvoted'],
                 ['post_downvoted', 'post_undownvoted'],
                 ['post_undownvoted', 'post_downvoted'],
+                ['asker_accepts_answer', 'asker_unaccept_answer'],
+                ['asker_unaccept_answer', 'asker_accepts_answer']
             ];
 
             // When we see an upvote, check if there's an unupvote that happened afterwards for the same post

@@ -424,7 +424,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var groupableEventTypes = ['post_upvoted', 'post_unupvoted', 'post_downvoted', 'post_undownvoted', 'user_deleted', 'vote_fraud_reversal'];
+    var groupableEventTypes = ['post_upvoted', 'post_unupvoted', 'post_downvoted', 'post_undownvoted', 'user_deleted', 'vote_fraud_reversal',
+        'asker_unaccept_answer', 'asker_accepts_answer'];
     function SortItems(items) {
         items.sort(function (a, b) {
             var dateDiff = b.creation_date - a.creation_date;
@@ -480,6 +481,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     ['post_unupvoted', 'post_upvoted'],
                     ['post_downvoted', 'post_undownvoted'],
                     ['post_undownvoted', 'post_downvoted'],
+                    ['asker_accepts_answer', 'asker_unaccept_answer'],
+                    ['asker_unaccept_answer', 'asker_accepts_answer']
                 ];
                 // When we see an upvote, check if there's an unupvote that happened afterwards for the same post
                 // If there were, we strikethrough each event.
