@@ -91,7 +91,7 @@
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(1), __webpack_require__(2), __webpack_require__(3)], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports, Tools_1, ReputationAnalyser_1, ReputationFixer_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var css = "\n.detailed_reputation_table {\n    width: 100%;\n    font-size: 10px;\n}\n\n.detailed_reputation_table td {\n    padding: 5px;\n}\n\n.detailed_reputation_table tr:nth-child(even) {\n    background-color: #f2f2f2;\n}\n\n.detailed_reputation_table_header {\n    font-size: 12px;\n}\n\n.post-matcher {\n    opacity: 0;\n    padding-left: 5px;\n}\n\n.detailed_reputation_table tr > td.post-col:hover .post-matcher,\n.detailed_reputation_table_highlighted .post-matcher {\n    opacity: 1;\n}\n\n.user-details-div {\n    display: inline;\n    margin-left: 15px;\n}\n.user-details-div a {\n    margin-left: 5px;\n}\n";
+    var css = "\n.detailed_reputation_table {\n    width: 100%;\n    font-size: 10px;\n}\n\n.detailed_reputation_table td {\n    padding: 5px;\n}\n\n.detailed_reputation_table tr:nth-child(even) {\n    background-color: #f2f2f2;\n}\n\n.detailed_reputation_table_header {\n    font-size: 12px;\n}\n\n.post-matcher {\n    opacity: 0;\n    padding-left: 5px;\n}\n\n.detailed_reputation_table tr > td.post-col:hover .post-matcher,\n.detailed_reputation_table_highlighted .post-matcher {\n    opacity: 1;\n}\n\n.user-details-div {\n    display: inline;\n    margin-left: 15px;\n}\n.user-details-div a {\n    margin-left: 5px;\n}\n\n.summary-table {\n    width: 100%;\n    margin: 5px;\n    font-size: 15px;\n}\n\n.summary-table p {\n    color: red;\n    display: inline;\n}\n";
     function getBucketColour(index, numBuckets) {
         // Here, we multiply by 3 to try to pick contrasting colours for blocks which are close to eachother
         var colourNum = ((360 / numBuckets) * index * 3 % 360);
@@ -117,6 +117,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 if (window.location.href.match(tabSelectedRegex)) {
                     $('.user-tab-sorts a').removeClass('youarehere');
                     $(detailedLink).addClass('youarehere');
+                    $('#stats').prepend('<div id="rep-page-summary">');
                     RenderDetailedReputation(45, 3, false);
                     var linkToXref = $("<a style=\"margin-left: 5px\" href=\"https://stackoverflow.com/admin/xref-user-ips/" + userId + "\" target=\"_blank\">xref</a>");
                     var linkToVotes = $("<a href=\"https://stackoverflow.com/admin/show-user-votes/" + userId + "\" target=\"_blank\">votes</a>");
@@ -155,6 +156,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             function RenderDetailedReputation(secondsGap, bucketSize, showReversedUser) {
                 var repPageContainer = $('#rep-page-container');
                 repPageContainer.empty();
+                var repPageSummary = $('#rep-page-summary');
+                repPageSummary.empty();
                 var footerContainer = $('.user-tab-footer');
                 footerContainer.empty();
                 var apiData = ReputationFixer_1.GetCurrentReputationPage(userId);
@@ -198,12 +201,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         var votesPage = "/admin/show-user-votes/" + userId;
                         votesDataPromise = fetch(votesPage).then(function (r) { return r.text(); });
                     }
+                    var totalVotes = 0;
+                    var totalVotesReversed = 0;
+                    var totalReptuationReversed = 0;
                     var tableBody = newTable.find('#detailed_reputation_body');
                     copiedData.items.forEach(function (row) {
                         var typedRow = row;
                         var bucket = typedRow.bucket;
                         var bucketIndex = acceptableBuckets.indexOf(bucket);
-                        var htmlRow = $("\n                    <tr>\n                        <td>" + moment.unix(row.creation_date).format('YYYY-MM-DD HH:mm:ss') + "</td>\n                        <td>" + row.reputation_history_type + "</td>\n                        <td>" + row.reputation_change + "</td>\n                        <td class=\"post-col\"><a href=\"/q/" + row.post_id + "\">" + row.post_id + "</a><a class=\"post-matcher\" href=\"javascript:void(0);\">\uD83D\uDCCC</a></td>\n                        <td class=\"reversal-type\"></td>\n                    </tr>\n                    ");
+                        var htmlRow = $("\n                    <tr>\n                        <td>" + moment.unix(row.creation_date).format('YYYY-MM-DD HH:mm:ss') + "</td>\n                        <td>" + row.reputation_history_type + "</td>\n                        <td id=\"rep-change\">" + row.reputation_change + "</td>\n                        <td class=\"post-col\"><a href=\"/q/" + row.post_id + "\">" + row.post_id + "</a><a class=\"post-matcher\" href=\"javascript:void(0);\">\uD83D\uDCCC</a></td>\n                        <td class=\"reversal-type\"></td>\n                    </tr>\n                    ");
                         if (typedRow.reputation_history_type === 'association_bonus') {
                             htmlRow.find('.post-col').empty();
                         }
@@ -307,23 +313,58 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             }
                             htmlRow.css('background-color', bucketColour);
                             var rowReversalTypes = [];
+                            var actualReputationChange = typedRow.reputation_change;
+                            if (actualReputationChange === 0) {
+                                var matchedElsewhere = copiedData.items.find(function (i) {
+                                    return i.post_id === typedRow.post_id
+                                        && i.reputation_history_type === typedRow.reputation_history_type
+                                        && i.reputation_change > 0;
+                                });
+                                if (matchedElsewhere) {
+                                    actualReputationChange = matchedElsewhere.reputation_change;
+                                    htmlRow.find('#rep-change').text(htmlRow.find('#rep-change').text() + ' (' + actualReputationChange + ')');
+                                }
+                            }
+                            var partialVoteReversed = 0;
                             if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
                                 var allData_1 = Array.prototype.concat.apply([], acceptableBuckets)
+                                    .filter(function (d) { return reversalTypes.indexOf(d.reputation_history_type) < 0; })
                                     .filter(function (d) { return d.post_id === typedRow.post_id && !d.canIgnore; });
                                 var countAll = function (src, func) {
                                     return allData_1.filter(function (i) { return src.find(function (di) { return func(di, i); }); }).length;
                                 };
                                 var matchingDeletions = deletionEvents.filter(function (i) { return postHasDeletion_1(i, typedRow); }).length;
                                 if (matchingDeletions > 0) {
-                                    rowReversalTypes.push("UD (" + matchingDeletions + "/" + countAll(deletionEvents, postHasDeletion_1) + ")");
+                                    var allVotes = countAll(deletionEvents, postHasDeletion_1);
+                                    rowReversalTypes.push("UD (" + matchingDeletions + "/" + allVotes + ")");
+                                    partialVoteReversed += 1 - (matchingDeletions / allVotes);
                                 }
                                 var matchingAutomaticReversals = automaticallyReversed.filter(function (i) { return postHasAutomaticReversal_1(i, typedRow); }).length;
                                 if (matchingAutomaticReversals > 0) {
-                                    rowReversalTypes.push("UD (" + matchingAutomaticReversals + "/" + countAll(automaticallyReversed, postHasAutomaticReversal_1) + ")");
+                                    var allVotes = countAll(automaticallyReversed, postHasAutomaticReversal_1);
+                                    rowReversalTypes.push("AR (" + matchingAutomaticReversals + "/" + allVotes + ")");
+                                    partialVoteReversed += 1 - (matchingAutomaticReversals / allVotes);
                                 }
                                 var matchingManualReversals = manuallyReversed.filter(function (i) { return postHasManualReversal_1(i, typedRow); }).length;
                                 if (matchingManualReversals) {
-                                    rowReversalTypes.push("UD (" + matchingManualReversals + "/" + countAll(manuallyReversed, postHasManualReversal_1) + ")");
+                                    var allVotes = countAll(manuallyReversed, postHasManualReversal_1);
+                                    rowReversalTypes.push("MR (" + matchingManualReversals + "/" + allVotes + ")");
+                                    partialVoteReversed += 1 - (matchingManualReversals / allVotes);
+                                }
+                                if (partialVoteReversed === 0) {
+                                    partialVoteReversed = 1;
+                                }
+                                totalVotes++;
+                                totalVotesReversed += partialVoteReversed;
+                                totalReptuationReversed += actualReputationChange * (partialVoteReversed);
+                                if (rowReversalTypes.length > 1) {
+                                    rowReversalTypes.push('❓');
+                                }
+                                else if (partialVoteReversed > 0) {
+                                    rowReversalTypes.push('❌');
+                                }
+                                else {
+                                    rowReversalTypes.push('✅');
                                 }
                                 htmlRow.find('.reversal-type').text(rowReversalTypes.join(' '));
                             }
@@ -335,6 +376,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         rowsById[row.post_id].push(htmlRow);
                     });
                     repPageContainer.append(newTable);
+                    if (totalVotes > 0) {
+                        if (totalVotesReversed > 0) {
+                            repPageSummary.append("\n                            <hr style=\"margin-bottom: 0px;\" />\n                            <table class=\"summary-table\">\n                                <tr>\n                                    <td><p>Total votes</p>: " + totalVotes + "</td>\n                                    <td><p>Votes not reversed</p>: " + Math.round(totalVotesReversed) + "</td>\n                                    <td><p>Reputation not reversed</p>: " + Math.round(totalReptuationReversed) + "</td>\n                                </tr>\n                            </table>\n                            <hr style=\"margin-bottom: 0px;\" />\n                        ");
+                        }
+                        else {
+                            repPageSummary.append("\n                            <hr style=\"margin-bottom: 0px;\" />\n                            <p style=\"margin-top: 5px; margin-bottom: 5px; margin-left: 5px;\">All suspicious votes reversed</p>\n                            <hr style=\"margin-bottom: 0px;\" />\n                        ");
+                        }
+                    }
                 });
             }
         });

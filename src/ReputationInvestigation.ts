@@ -41,6 +41,17 @@ const css = `
 .user-details-div a {
     margin-left: 5px;
 }
+
+.summary-table {
+    width: 100%;
+    margin: 5px;
+    font-size: 15px;
+}
+
+.summary-table p {
+    color: red;
+    display: inline;
+}
 `;
 
 function getBucketColour(index: number, numBuckets: number) {
@@ -74,6 +85,9 @@ $(() => {
             if (window.location.href.match(tabSelectedRegex)) {
                 $('.user-tab-sorts a').removeClass('youarehere');
                 $(detailedLink).addClass('youarehere');
+
+                $('#stats').prepend('<div id="rep-page-summary">');
+
                 RenderDetailedReputation(45, 3, false);
 
                 const linkToXref = $(`<a style="margin-left: 5px" href="https://stackoverflow.com/admin/xref-user-ips/${userId}" target="_blank">xref</a>`);
@@ -121,6 +135,9 @@ $(() => {
         function RenderDetailedReputation(secondsGap: number, bucketSize: number, showReversedUser: boolean) {
             const repPageContainer = $('#rep-page-container');
             repPageContainer.empty();
+
+            const repPageSummary = $('#rep-page-summary');
+            repPageSummary.empty();
 
             const footerContainer = $('.user-tab-footer');
             footerContainer.empty();
@@ -179,6 +196,10 @@ $(() => {
                     votesDataPromise = fetch(votesPage).then(r => r.text());
                 }
 
+                let totalVotes = 0;
+                let totalVotesReversed = 0;
+                let totalReptuationReversed = 0;
+
                 const tableBody = newTable.find('#detailed_reputation_body');
                 copiedData.items.forEach(row => {
                     const typedRow = row as ReputationEventDetails;
@@ -189,7 +210,7 @@ $(() => {
                     <tr>
                         <td>${moment.unix(row.creation_date).format('YYYY-MM-DD HH:mm:ss')}</td>
                         <td>${row.reputation_history_type}</td>
-                        <td>${row.reputation_change}</td>
+                        <td id="rep-change">${row.reputation_change}</td>
                         <td class="post-col"><a href="/q/${row.post_id}">${row.post_id}</a><a class="post-matcher" href="javascript:void(0);">📌</a></td>
                         <td class="reversal-type"></td>
                     </tr>
@@ -327,25 +348,63 @@ $(() => {
 
                         const rowReversalTypes = [];
 
+                        let actualReputationChange = typedRow.reputation_change;
+                        if (actualReputationChange === 0) { // They rep capped. Let's see if we can find the actual number elsewhere
+                            const matchedElsewhere = copiedData.items.find(i =>
+                                i.post_id === typedRow.post_id
+                                && i.reputation_history_type === typedRow.reputation_history_type
+                                && i.reputation_change > 0);
+                            if (matchedElsewhere) {
+                                actualReputationChange = matchedElsewhere.reputation_change;
+                                htmlRow.find('#rep-change').text(
+                                    htmlRow.find('#rep-change').text() + ' (' + actualReputationChange + ')'
+                                );
+                            }
+                        }
+
+                        let partialVoteReversed = 0;
                         if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
                             const allData = (Array.prototype.concat.apply([], acceptableBuckets) as ReputationEventDetails[])
+                                .filter(d => reversalTypes.indexOf(d.reputation_history_type) < 0)
                                 .filter(d => d.post_id === typedRow.post_id && !d.canIgnore);
 
                             const countAll = (src: ReputationEvent[], func: (reversal: ReputationEvent, current: ReputationEvent) => boolean) => {
                                 return allData.filter(i => src.find(di => func(di, i))).length;
                             };
-
                             const matchingDeletions = deletionEvents.filter(i => postHasDeletion(i, typedRow)).length;
                             if (matchingDeletions > 0) {
-                                rowReversalTypes.push(`UD (${matchingDeletions}/${countAll(deletionEvents, postHasDeletion)})`);
+                                const allVotes = countAll(deletionEvents, postHasDeletion);
+                                rowReversalTypes.push(`UD (${matchingDeletions}/${allVotes})`);
+
+                                partialVoteReversed += 1 - (matchingDeletions / allVotes);
                             }
                             const matchingAutomaticReversals = automaticallyReversed.filter(i => postHasAutomaticReversal(i, typedRow)).length;
                             if (matchingAutomaticReversals > 0) {
-                                rowReversalTypes.push(`AR (${matchingAutomaticReversals}/${countAll(automaticallyReversed, postHasAutomaticReversal)})`);
+                                const allVotes = countAll(automaticallyReversed, postHasAutomaticReversal);
+                                rowReversalTypes.push(`AR (${matchingAutomaticReversals}/${allVotes})`);
+
+                                partialVoteReversed += 1 - (matchingAutomaticReversals / allVotes);
                             }
                             const matchingManualReversals = manuallyReversed.filter(i => postHasManualReversal(i, typedRow)).length;
                             if (matchingManualReversals) {
-                                rowReversalTypes.push(`MR (${matchingManualReversals}/${countAll(manuallyReversed, postHasManualReversal)})`);
+                                const allVotes = countAll(manuallyReversed, postHasManualReversal);
+                                rowReversalTypes.push(`MR (${matchingManualReversals}/${allVotes})`);
+
+                                partialVoteReversed += 1 - (matchingManualReversals / allVotes);
+                            }
+                            if (partialVoteReversed === 0) {
+                                partialVoteReversed = 1;
+                            }
+                            totalVotes++;
+                            totalVotesReversed += partialVoteReversed;
+                            totalReptuationReversed += actualReputationChange * (partialVoteReversed);
+
+                            if (rowReversalTypes.length > 1) {
+                                rowReversalTypes.push('❓');
+                            } else if (partialVoteReversed > 0) {
+                                rowReversalTypes.push('❌');
+                            } else {
+                                rowReversalTypes.push('✅');
                             }
 
                             htmlRow.find('.reversal-type').text(rowReversalTypes.join(' '));
@@ -360,6 +419,28 @@ $(() => {
                 });
 
                 repPageContainer.append(newTable);
+
+                if (totalVotes > 0) {
+                    if (totalVotesReversed > 0) {
+                        repPageSummary.append(`
+                            <hr style="margin-bottom: 0px;" />
+                            <table class="summary-table">
+                                <tr>
+                                    <td><p>Total votes</p>: ${totalVotes}</td>
+                                    <td><p>Votes not reversed</p>: ${Math.round(totalVotesReversed)}</td>
+                                    <td><p>Reputation not reversed</p>: ${Math.round(totalReptuationReversed)}</td>
+                                </tr>
+                            </table>
+                            <hr style="margin-bottom: 0px;" />
+                        `);
+                    } else {
+                        repPageSummary.append(`
+                            <hr style="margin-bottom: 0px;" />
+                            <p style="margin-top: 5px; margin-bottom: 5px; margin-left: 5px;">All suspicious votes reversed</p>
+                            <hr style="margin-bottom: 0px;" />
+                        `);
+                    }
+                }
             });
         }
     });
