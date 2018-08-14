@@ -2,6 +2,7 @@ import { ApiResponse, ReputationEvent } from 'ReptuationApiResponse';
 import { AddStyleText } from 'Tools';
 import * as moment from 'moment';
 import { ProcessItems, SortItems, ReputationEventDetails } from 'ReputationAnalyser';
+import { GetCurrentReputationPage, GetNextReputationPage } from 'ReputationFixer';
 
 declare var StackExchange: any;
 
@@ -40,7 +41,7 @@ function getBucketColour(index: number, numBuckets: number) {
 
 type ReputationEventWithRow = ReputationEvent & { html_row: JQuery };
 
-let apiData: Promise<ApiResponse> | null = null;
+// let apiData: Promise<ApiResponse> | null = null;
 let votesDataPromise: Promise<any> | null = null;
 
 $(() => {
@@ -89,15 +90,24 @@ $(() => {
             const repPageContainer = $('#rep-page-container');
             repPageContainer.empty();
 
-            if (apiData == null) {
-                const requestEndpoint = `https://api.stackexchange.com/2.2/users/${userId}/reputation-history?pagesize=100&site=stackoverflow`;
-                apiData = fetch(requestEndpoint).then(r => r.json());
-            }
+            const footerContainer = $('.user-tab-footer');
+            footerContainer.empty();
+
+            const apiData = GetCurrentReputationPage(userId);
 
             let highlightedRows: JQuery[] = [];
             const rowsById: JQuery[][] = [];
 
             apiData.then(data => {
+                if (data.hasMore) {
+                    const loadMoreData = $('<a href="javascript:void(0);">Load more</a>');
+                    loadMoreData.click(() => {
+                        loadMoreData.hide();
+                        GetNextReputationPage(userId).then(() => RenderDetailedReputation(secondsGap));
+                    });
+                    footerContainer.append(loadMoreData);
+                }
+
                 const copiedData = JSON.parse(JSON.stringify(data)) as ApiResponse;
                 const buckets = ProcessItems(copiedData.items, secondsGap);
                 const acceptableBuckets = buckets.filter(b => b.length >= 3);
