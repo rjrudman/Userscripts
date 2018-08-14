@@ -1,6 +1,6 @@
 import { ApiResponse, ReputationEvent } from 'ReptuationApiResponse';
 import { AddStyleText } from 'Tools';
-import { ProcessItems, ReputationEventDetails } from 'ReputationAnalyser';
+import { ProcessIntoBuckets, ReputationEventDetails } from 'ReputationAnalyser';
 import { GetCurrentReputationPage, GetNextReputationPage } from 'ReputationFixer';
 import { __values } from '../node_modules/tslib';
 
@@ -158,7 +158,7 @@ $(() => {
                 }
 
                 const copiedData = JSON.parse(JSON.stringify(data)) as ApiResponse;
-                const buckets = ProcessItems(copiedData.items, secondsGap);
+                const buckets = ProcessIntoBuckets(copiedData.items, secondsGap);
                 const acceptableBuckets = buckets.filter(b => b.length >= bucketSize);
 
                 const newTable = $(`
@@ -362,46 +362,54 @@ $(() => {
                             }
                         }
 
-                        let partialVoteReversed = 0;
                         if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
                             const allData = (Array.prototype.concat.apply([], acceptableBuckets) as ReputationEventDetails[])
                                 .filter(d => reversalTypes.indexOf(d.reputation_history_type) < 0)
                                 .filter(d => d.post_id === typedRow.post_id && !d.canIgnore);
 
-                            const countAll = (src: ReputationEvent[], func: (reversal: ReputationEvent, current: ReputationEvent) => boolean) => {
-                                return allData.filter(i => src.find(di => func(di, i))).length;
+                            const findAll = (src: ReputationEvent[], func: (reversal: ReputationEvent, current: ReputationEvent) => boolean) => {
+                                return allData.filter(i => src.find(di => func(di, i)));
                             };
+                            const countAll = (src: ReputationEvent[], func: (reversal: ReputationEvent, current: ReputationEvent) => boolean) => {
+                                return findAll(src, func).length;
+                            };
+
                             const matchingDeletions = deletionEvents.filter(i => postHasDeletion(i, typedRow)).length;
                             if (matchingDeletions > 0) {
                                 const allVotes = countAll(deletionEvents, postHasDeletion);
                                 rowReversalTypes.push(`UD (${matchingDeletions}/${allVotes})`);
-
-                                partialVoteReversed += 1 - (matchingDeletions / allVotes);
                             }
                             const matchingAutomaticReversals = automaticallyReversed.filter(i => postHasAutomaticReversal(i, typedRow)).length;
                             if (matchingAutomaticReversals > 0) {
                                 const allVotes = countAll(automaticallyReversed, postHasAutomaticReversal);
                                 rowReversalTypes.push(`AR (${matchingAutomaticReversals}/${allVotes})`);
-
-                                partialVoteReversed += 1 - (matchingAutomaticReversals / allVotes);
                             }
                             const matchingManualReversals = manuallyReversed.filter(i => postHasManualReversal(i, typedRow)).length;
                             if (matchingManualReversals) {
                                 const allVotes = countAll(manuallyReversed, postHasManualReversal);
                                 rowReversalTypes.push(`MR (${matchingManualReversals}/${allVotes})`);
+                            }
 
-                                partialVoteReversed += 1 - (matchingManualReversals / allVotes);
-                            }
-                            if (partialVoteReversed === 0) {
-                                partialVoteReversed = 1;
-                            }
+                            const allOtherVotes = findAll(deletionEvents, postHasDeletion)
+                                .concat(
+                                    findAll(automaticallyReversed, postHasAutomaticReversal)
+                                ).concat(
+                                    findAll(manuallyReversed, postHasManualReversal)
+                                )
+                                .map(i => i.vote_id)
+                                .filter((value, index, self) => self.indexOf(value) === index) // Makes distinct (https://stackoverflow.com/questions/1960473)
+                                .length;
+
+                            const partialVoteReversed =
+                                allOtherVotes === 0 ?
+                                    1 :
+                                    1 - ((matchingDeletions + matchingAutomaticReversals + matchingManualReversals) / allOtherVotes);
+
                             totalVotes++;
                             totalVotesReversed += partialVoteReversed;
                             totalReptuationReversed += actualReputationChange * (partialVoteReversed);
 
-                            if (rowReversalTypes.length > 1) {
-                                rowReversalTypes.push('❓');
-                            } else if (partialVoteReversed > 0) {
+                            if (partialVoteReversed > 0) {
                                 rowReversalTypes.push('❌');
                             } else {
                                 rowReversalTypes.push('✅');

@@ -2,6 +2,7 @@ import { ReputationEvent } from 'ReptuationApiResponse';
 
 export type ReputationEventDetails = ReputationEvent & {
     bucket: ReputationEventDetails[];
+    vote_id: number;
     firstInBucket?: boolean;
     canIgnore?: boolean; // For example, upvote/unupvote at the same time
 };
@@ -28,10 +29,10 @@ function SortItems(items: ReputationEvent[]) {
     });
 }
 
-export function ProcessItems(items: ReputationEvent[], secondsGap: number): ReputationEventDetails[][] {
+export function ProcessIntoBuckets(items: ReputationEvent[], secondsGap: number): ReputationEventDetails[][] {
     const buckets: ReputationEventDetails[][] = [];
     SortItems(items);
-
+    let i = 1;
     items.forEach(item => {
         if (groupableEventTypes.indexOf(item.reputation_history_type) >= 0) {
             // Find which bucket to put it in
@@ -85,6 +86,7 @@ export function ProcessItems(items: ReputationEvent[], secondsGap: number): Repu
 
             const typedBucket = matchingBucket as ReputationEventDetails[];
             reputationEventDetails.bucket = typedBucket;
+            reputationEventDetails.vote_id = i++;
             typedBucket.push(reputationEventDetails);
         }
     });

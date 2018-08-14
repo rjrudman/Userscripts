@@ -173,7 +173,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         footerContainer.append(loadMoreData_1);
                     }
                     var copiedData = JSON.parse(JSON.stringify(data));
-                    var buckets = ReputationAnalyser_1.ProcessItems(copiedData.items, secondsGap);
+                    var buckets = ReputationAnalyser_1.ProcessIntoBuckets(copiedData.items, secondsGap);
                     var acceptableBuckets = buckets.filter(function (b) { return b.length >= bucketSize; });
                     var newTable = $("\n                    <table class=\"detailed_reputation_table\">\n                        <tbody id=\"detailed_reputation_body\">\n                        </tbody>\n                    </table>\n                    ");
                     var reversalTypes = ['user_deleted', 'vote_fraud_reversal'];
@@ -325,42 +325,43 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                     htmlRow.find('#rep-change').text(htmlRow.find('#rep-change').text() + ' (' + actualReputationChange + ')');
                                 }
                             }
-                            var partialVoteReversed = 0;
                             if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
                                 var allData_1 = Array.prototype.concat.apply([], acceptableBuckets)
                                     .filter(function (d) { return reversalTypes.indexOf(d.reputation_history_type) < 0; })
                                     .filter(function (d) { return d.post_id === typedRow.post_id && !d.canIgnore; });
+                                var findAll_1 = function (src, func) {
+                                    return allData_1.filter(function (i) { return src.find(function (di) { return func(di, i); }); });
+                                };
                                 var countAll = function (src, func) {
-                                    return allData_1.filter(function (i) { return src.find(function (di) { return func(di, i); }); }).length;
+                                    return findAll_1(src, func).length;
                                 };
                                 var matchingDeletions = deletionEvents.filter(function (i) { return postHasDeletion_1(i, typedRow); }).length;
                                 if (matchingDeletions > 0) {
                                     var allVotes = countAll(deletionEvents, postHasDeletion_1);
                                     rowReversalTypes.push("UD (" + matchingDeletions + "/" + allVotes + ")");
-                                    partialVoteReversed += 1 - (matchingDeletions / allVotes);
                                 }
                                 var matchingAutomaticReversals = automaticallyReversed.filter(function (i) { return postHasAutomaticReversal_1(i, typedRow); }).length;
                                 if (matchingAutomaticReversals > 0) {
                                     var allVotes = countAll(automaticallyReversed, postHasAutomaticReversal_1);
                                     rowReversalTypes.push("AR (" + matchingAutomaticReversals + "/" + allVotes + ")");
-                                    partialVoteReversed += 1 - (matchingAutomaticReversals / allVotes);
                                 }
                                 var matchingManualReversals = manuallyReversed.filter(function (i) { return postHasManualReversal_1(i, typedRow); }).length;
                                 if (matchingManualReversals) {
                                     var allVotes = countAll(manuallyReversed, postHasManualReversal_1);
                                     rowReversalTypes.push("MR (" + matchingManualReversals + "/" + allVotes + ")");
-                                    partialVoteReversed += 1 - (matchingManualReversals / allVotes);
                                 }
-                                if (partialVoteReversed === 0) {
-                                    partialVoteReversed = 1;
-                                }
+                                var allOtherVotes = findAll_1(deletionEvents, postHasDeletion_1)
+                                    .concat(findAll_1(automaticallyReversed, postHasAutomaticReversal_1)).concat(findAll_1(manuallyReversed, postHasManualReversal_1))
+                                    .map(function (i) { return i.vote_id; })
+                                    .filter(function (value, index, self) { return self.indexOf(value) === index; }) // Makes distinct (https://stackoverflow.com/questions/1960473)
+                                    .length;
+                                var partialVoteReversed = allOtherVotes === 0 ?
+                                    1 :
+                                    1 - ((matchingDeletions + matchingAutomaticReversals + matchingManualReversals) / allOtherVotes);
                                 totalVotes++;
                                 totalVotesReversed += partialVoteReversed;
                                 totalReptuationReversed += actualReputationChange * (partialVoteReversed);
-                                if (rowReversalTypes.length > 1) {
-                                    rowReversalTypes.push('❓');
-                                }
-                                else if (partialVoteReversed > 0) {
+                                if (partialVoteReversed > 0) {
                                     rowReversalTypes.push('❌');
                                 }
                                 else {
@@ -441,9 +442,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             return a.reputation_change - b.reputation_change;
         });
     }
-    function ProcessItems(items, secondsGap) {
+    function ProcessIntoBuckets(items, secondsGap) {
         var buckets = [];
         SortItems(items);
+        var i = 1;
         items.forEach(function (item) {
             if (groupableEventTypes.indexOf(item.reputation_history_type) >= 0) {
                 // Find which bucket to put it in
@@ -490,12 +492,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 var typedBucket = matchingBucket;
                 reputationEventDetails.bucket = typedBucket;
+                reputationEventDetails.vote_id = i++;
                 typedBucket.push(reputationEventDetails);
             }
         });
         return buckets;
     }
-    exports.ProcessItems = ProcessItems;
+    exports.ProcessIntoBuckets = ProcessIntoBuckets;
 }).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
