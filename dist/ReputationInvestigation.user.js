@@ -93,11 +93,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     Object.defineProperty(exports, "__esModule", { value: true });
     var css = "\n.detailed_reputation_table {\n    width: 100%;\n    font-size: 10px;\n}\n\n.detailed_reputation_table td {\n    padding: 5px;\n}\n\n.detailed_reputation_table tr:nth-child(even) {\n    background-color: #f2f2f2;\n}\n\n.detailed_reputation_table_header {\n    font-size: 12px;\n}\n\n.post-matcher {\n    opacity: 0;\n    padding-left: 5px;\n}\n\n.detailed_reputation_table tr > td.post-col:hover .post-matcher,\n.detailed_reputation_table_highlighted .post-matcher {\n    opacity: 1;\n}\n\n.user-details-div {\n    display: inline;\n    margin-left: 15px;\n}\n.user-details-div a {\n    margin-left: 5px;\n}\n";
     function getBucketColour(index, numBuckets) {
-        // We alternate between starting from the start and the back,
-        // so that similar colours are not placed next to eachother
-        var colourNum = index % 2 === 0
-            ? (360 / numBuckets) * index
-            : 360 - ((360 / numBuckets) * index);
+        // Here, we multiply by 3 to try to pick contrasting colours for blocks which are close to eachother
+        var colourNum = ((360 / numBuckets) * index * 3 % 360);
         var cssHSL = 'hsla(' + colourNum + ', 80%, 50%, 0.3)';
         return cssHSL;
     }
