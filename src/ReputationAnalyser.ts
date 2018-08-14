@@ -7,7 +7,7 @@ export type ReputationEventDetails = ReputationEvent & {
     canIgnore?: boolean; // For example, upvote/unupvote at the same time
 };
 
-const groupableEventTypes = ['post_upvoted', 'user_deleted', 'post_unupvoted', 'vote_fraud_reversal'];
+const groupableEventTypes = ['post_upvoted', 'post_unupvoted', 'post_downvoted', 'post_undownvoted', 'user_deleted', 'vote_fraud_reversal'];
 
 function SortItems(items: ReputationEvent[]) {
     items.sort((a, b) => {
@@ -67,37 +67,32 @@ export function ProcessIntoBuckets(items: ReputationEvent[], secondsGap: number)
                 reputationEventDetails.firstInBucket = true;
             }
 
+            const reversalPairs = [
+                ['post_upvoted', 'post_unupvoted'],
+                ['post_unupvoted', 'post_upvoted'],
+                ['post_downvoted', 'post_undownvoted'],
+                ['post_undownvoted', 'post_downvoted'],
+            ];
+
             // When we see an upvote, check if there's an unupvote that happened afterwards for the same post
             // If there were, we strikethrough each event.
             // Since we only check the same bucket, we won't be striking out unrelated votes (usually)
-            if (item.reputation_history_type === 'post_upvoted') {
-                const unupvote = matchingBucket.find(b =>
-                    b.post_id === item.post_id
-                    && b.reputation_history_type === 'post_unupvoted'
-                    && b.creation_date >= item.creation_date
-                    && !b.canIgnore
-                );
+            // Same goes for in reverse, and downvote/undownvote pairs
+            reversalPairs.forEach(pair => {
+                if (item.reputation_history_type === pair[0]) {
+                    const unupvote = (matchingBucket as ReputationEventDetails[]).find(b =>
+                        b.post_id === item.post_id
+                        && b.reputation_history_type === pair[1]
+                        && b.creation_date >= item.creation_date
+                        && !b.canIgnore
+                    );
 
-                if (unupvote) {
-                    unupvote.canIgnore = true;
-                    reputationEventDetails.canIgnore = true;
+                    if (unupvote) {
+                        unupvote.canIgnore = true;
+                        reputationEventDetails.canIgnore = true;
+                    }
                 }
-            }
-
-            // Same goes for unupvotes. If they unupvote and the upvote, we can ignore it
-            if (item.reputation_history_type === 'post_unupvoted') {
-                const upvte = matchingBucket.find(b =>
-                    b.post_id === item.post_id
-                    && b.reputation_history_type === 'post_upvoted'
-                    && b.creation_date >= item.creation_date
-                    && !b.canIgnore
-                );
-
-                if (upvte) {
-                    upvte.canIgnore = true;
-                    reputationEventDetails.canIgnore = true;
-                }
-            }
+            });
 
             const typedBucket = matchingBucket as ReputationEventDetails[];
             reputationEventDetails.bucket = typedBucket;

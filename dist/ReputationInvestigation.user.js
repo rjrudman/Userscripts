@@ -174,7 +174,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     var copiedData = JSON.parse(JSON.stringify(data));
                     var buckets = ReputationAnalyser_1.ProcessIntoBuckets(copiedData.items, secondsGap);
-                    var acceptableBuckets = buckets.filter(function (b) { return b.length >= bucketSize; });
+                    var acceptableBuckets = buckets.filter(function (b) { return b.filter(function (bb) { return !bb.canIgnore; }).length >= bucketSize; });
                     var newTable = $("\n                    <table class=\"detailed_reputation_table\">\n                        <tbody id=\"detailed_reputation_body\">\n                        </tbody>\n                    </table>\n                    ");
                     var reversalTypes = ['user_deleted', 'vote_fraud_reversal'];
                     var deletionEvents = copiedData.items.filter(function (s) { return s.reputation_history_type === 'user_deleted'; });
@@ -424,7 +424,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var groupableEventTypes = ['post_upvoted', 'user_deleted', 'post_unupvoted', 'vote_fraud_reversal'];
+    var groupableEventTypes = ['post_upvoted', 'post_unupvoted', 'post_downvoted', 'post_undownvoted', 'user_deleted', 'vote_fraud_reversal'];
     function SortItems(items) {
         items.sort(function (a, b) {
             var dateDiff = b.creation_date - a.creation_date;
@@ -449,7 +449,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         items.forEach(function (item) {
             if (groupableEventTypes.indexOf(item.reputation_history_type) >= 0) {
                 // Find which bucket to put it in
-                var matchingBucket = buckets.find(function (bucket) {
+                var matchingBucket_1 = buckets.find(function (bucket) {
                     // If we can't find any events in the bucket which are within our threshold, the bucket isn't valid
                     if (!bucket.find(function (event) { return (event.creation_date - item.creation_date) < secondsGap; })) {
                         return false;
@@ -469,44 +469,40 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     return true;
                 });
-                var reputationEventDetails = item;
-                if (!matchingBucket) {
-                    matchingBucket = [];
-                    buckets.push(matchingBucket);
-                    reputationEventDetails.firstInBucket = true;
+                var reputationEventDetails_1 = item;
+                if (!matchingBucket_1) {
+                    matchingBucket_1 = [];
+                    buckets.push(matchingBucket_1);
+                    reputationEventDetails_1.firstInBucket = true;
                 }
+                var reversalPairs = [
+                    ['post_upvoted', 'post_unupvoted'],
+                    ['post_unupvoted', 'post_upvoted'],
+                    ['post_downvoted', 'post_undownvoted'],
+                    ['post_undownvoted', 'post_downvoted'],
+                ];
                 // When we see an upvote, check if there's an unupvote that happened afterwards for the same post
                 // If there were, we strikethrough each event.
                 // Since we only check the same bucket, we won't be striking out unrelated votes (usually)
-                if (item.reputation_history_type === 'post_upvoted') {
-                    var unupvote = matchingBucket.find(function (b) {
-                        return b.post_id === item.post_id
-                            && b.reputation_history_type === 'post_unupvoted'
-                            && b.creation_date >= item.creation_date
-                            && !b.canIgnore;
-                    });
-                    if (unupvote) {
-                        unupvote.canIgnore = true;
-                        reputationEventDetails.canIgnore = true;
+                // Same goes for in reverse, and downvote/undownvote pairs
+                reversalPairs.forEach(function (pair) {
+                    if (item.reputation_history_type === pair[0]) {
+                        var unupvote = matchingBucket_1.find(function (b) {
+                            return b.post_id === item.post_id
+                                && b.reputation_history_type === pair[1]
+                                && b.creation_date >= item.creation_date
+                                && !b.canIgnore;
+                        });
+                        if (unupvote) {
+                            unupvote.canIgnore = true;
+                            reputationEventDetails_1.canIgnore = true;
+                        }
                     }
-                }
-                // Same goes for unupvotes. If they unupvote and the upvote, we can ignore it
-                if (item.reputation_history_type === 'post_unupvoted') {
-                    var upvte = matchingBucket.find(function (b) {
-                        return b.post_id === item.post_id
-                            && b.reputation_history_type === 'post_upvoted'
-                            && b.creation_date >= item.creation_date
-                            && !b.canIgnore;
-                    });
-                    if (upvte) {
-                        upvte.canIgnore = true;
-                        reputationEventDetails.canIgnore = true;
-                    }
-                }
-                var typedBucket = matchingBucket;
-                reputationEventDetails.bucket = typedBucket;
-                reputationEventDetails.vote_id = i++;
-                typedBucket.push(reputationEventDetails);
+                });
+                var typedBucket = matchingBucket_1;
+                reputationEventDetails_1.bucket = typedBucket;
+                reputationEventDetails_1.vote_id = i++;
+                typedBucket.push(reputationEventDetails_1);
             }
         });
         return buckets;

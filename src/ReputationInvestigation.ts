@@ -159,7 +159,7 @@ $(() => {
 
                 const copiedData = JSON.parse(JSON.stringify(data)) as ApiResponse;
                 const buckets = ProcessIntoBuckets(copiedData.items, secondsGap);
-                const acceptableBuckets = buckets.filter(b => b.length >= bucketSize);
+                const acceptableBuckets = buckets.filter(b => b.filter(bb => !bb.canIgnore).length >= bucketSize);
 
                 const newTable = $(`
                     <table class="detailed_reputation_table">
