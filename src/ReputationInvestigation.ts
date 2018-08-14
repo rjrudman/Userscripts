@@ -1,14 +1,16 @@
 import { ApiResponse, ReputationEvent } from 'ReptuationApiResponse';
 import { AddStyleText } from 'Tools';
 import * as moment from 'moment';
-import { ProcessItems, SortItems, ReputationEventDetails } from 'ReputationAnalyser';
+import { ProcessItems, ReputationEventDetails } from 'ReputationAnalyser';
 import { GetCurrentReputationPage, GetNextReputationPage } from 'ReputationFixer';
+import { __values } from '../node_modules/tslib';
 
 declare var StackExchange: any;
 
 const css = `
 .detailed_reputation_table {
     width: 100%;
+    font-size: 10px;
 }
 
 .detailed_reputation_table td {
@@ -20,7 +22,7 @@ const css = `
 }
 
 .detailed_reputation_table_header {
-    font-size: 20px;
+    font-size: 12px;
 }
 
 .post-matcher {
@@ -32,6 +34,14 @@ const css = `
 .detailed_reputation_table_highlighted .post-matcher {
     opacity: 1;
 }
+
+.user-details-div {
+    display: inline;
+    margin-left: 15px;
+}
+.user-details-div a {
+    margin-left: 5px;
+}
 `;
 
 function getBucketColour(index: number, numBuckets: number) {
@@ -39,9 +49,6 @@ function getBucketColour(index: number, numBuckets: number) {
     return cssHSL;
 }
 
-type ReputationEventWithRow = ReputationEvent & { html_row: JQuery };
-
-// let apiData: Promise<ApiResponse> | null = null;
 let votesDataPromise: Promise<any> | null = null;
 
 $(() => {
@@ -66,18 +73,36 @@ $(() => {
             if (window.location.href.match(tabSelectedRegex)) {
                 $('.user-tab-sorts a').removeClass('youarehere');
                 $(detailedLink).addClass('youarehere');
-                RenderDetailedReputation(45);
+                RenderDetailedReputation(45, 3, false);
+
+                const showVoters = $('<input type="checkbox" id="chkShowReversedUser">');
+                $('#stats').prepend(showVoters);
+                $('#stats').prepend('<label for="chkShowReversedUser" style="margin-right: 15px; margin-left: 15px;">Show reversed user</label>');
+                if (!StackExchange.options.user.isModerator) {
+                    showVoters.hide();
+                }
+
+                const bucketSizeInput = $('<input type="number" value="3" />');
+                $('#stats').prepend(bucketSizeInput);
+                $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Set minimum bucket size</label>');
 
                 const numSecondsInput = $('<input type="number" value="45" />');
                 $('#stats').prepend(numSecondsInput);
-                $('#stats').prepend('<label style="margin-right: 15px">Set number of seconds between votes</label>');
+                $('#stats').prepend('<label style="margin-right: 15px;">Set number of seconds between votes</label>');
 
-                numSecondsInput.change(() => {
+                const onChange = () => {
                     const numSeconds = parseInt(numSecondsInput.val(), 10);
-                    RenderDetailedReputation(numSeconds);
-                });
+                    const bucketSize = parseInt(bucketSizeInput.val(), 10);
+                    const showReversedUser = !!showVoters.prop('checked');
+                    RenderDetailedReputation(numSeconds, bucketSize, showReversedUser);
+                };
+
+                showVoters.change(onChange);
+                numSecondsInput.change(onChange);
+                bucketSizeInput.change(onChange);
             }
 
+            // SE destroys the tab when swapping. Watch for that, and add back our UI items.
             detailedLink.bind('destroyed', () => {
                 setTimeout(() => { addUiItems(); });
             });
@@ -86,7 +111,7 @@ $(() => {
         }
         addUiItems();
 
-        function RenderDetailedReputation(secondsGap: number) {
+        function RenderDetailedReputation(secondsGap: number, bucketSize: number, showReversedUser: boolean) {
             const repPageContainer = $('#rep-page-container');
             repPageContainer.empty();
 
@@ -103,14 +128,14 @@ $(() => {
                     const loadMoreData = $('<a href="javascript:void(0);">Load more</a>');
                     loadMoreData.click(() => {
                         loadMoreData.hide();
-                        GetNextReputationPage(userId).then(() => RenderDetailedReputation(secondsGap));
+                        GetNextReputationPage(userId).then(() => RenderDetailedReputation(secondsGap, bucketSize, showReversedUser));
                     });
                     footerContainer.append(loadMoreData);
                 }
 
                 const copiedData = JSON.parse(JSON.stringify(data)) as ApiResponse;
                 const buckets = ProcessItems(copiedData.items, secondsGap);
-                const acceptableBuckets = buckets.filter(b => b.length >= 3);
+                const acceptableBuckets = buckets.filter(b => b.length >= bucketSize);
 
                 const newTable = $(`
                     <table class="detailed_reputation_table">
@@ -119,12 +144,12 @@ $(() => {
                     </table>
                     `);
 
-                const deletionTypes = ['user_deleted', 'vote_fraud_reversal'];
+                const reversalTypes = ['user_deleted', 'vote_fraud_reversal'];
                 const deletionEvents = copiedData.items.filter(s => s.reputation_history_type === 'user_deleted');
                 const automaticallyReversed = copiedData.items.filter(s => {
                     const date = moment.unix(s.creation_date).utc();
                     if (s.reputation_history_type === 'vote_fraud_reversal') {
-                        if (date.minute() === 0 && date.hour() === 3) {
+                        if (date.minute() <= 5 && date.hour() === 3) {
                             return true;
                         }
                     }
@@ -133,14 +158,14 @@ $(() => {
                 const manuallyReversed = copiedData.items.filter(s => {
                     const date = moment.unix(s.creation_date).utc();
                     if (s.reputation_history_type === 'vote_fraud_reversal') {
-                        if (date.minute() !== 0 || date.hour() !== 3) {
+                        if (date.minute() > 5 || date.hour() !== 3) {
                             return true;
                         }
                     }
                     return false;
                 });
 
-                if (deletionEvents.length && votesDataPromise == null) {
+                if (showReversedUser && deletionEvents.length && votesDataPromise == null && StackExchange.options.user.isModerator) {
                     const votesPage = `/admin/show-user-votes/${userId}`;
                     votesDataPromise = fetch(votesPage).then(r => r.text());
                 }
@@ -157,9 +182,7 @@ $(() => {
                         <td>${row.reputation_history_type}</td>
                         <td>${row.reputation_change}</td>
                         <td class="post-col"><a href="/q/${row.post_id}">${row.post_id}</a><a class="post-matcher" href="javascript:void(0);">📌</a></td>
-                        <td class="user-deleted"></td>
-                        <td class="automatically-reversed"></td>
-                        <td class="cm-reversed"></td>
+                        <td class="reversal-type"></td>
                     </tr>
                     `);
 
@@ -209,27 +232,67 @@ $(() => {
                     if (bucketIndex > -1) {
                         const bucketColour = getBucketColour(bucketIndex, acceptableBuckets.length);
 
+                        const postHasDeletion = (reversal: ReputationEvent, current: ReputationEvent) =>
+                            reversal.post_id === current.post_id
+                            && reversal.creation_date > current.creation_date;
+                        const postHasAutomaticReversal = (reversal: ReputationEvent, current: ReputationEvent) =>
+                            reversal.post_id === current.post_id && (reversal.creation_date - typedRow.creation_date <= 60 * 60 * 24)
+                            && reversal.creation_date > current.creation_date;
+                        const postHasManualReversal = (reversal: ReputationEvent, current: ReputationEvent) => reversal.post_id === current.post_id
+                            && reversal.creation_date > current.creation_date;
+
                         if (typedRow.firstInBucket) {
-                            if (deletionTypes.indexOf(typedRow.reputation_history_type) >= 0) {
+                            if (reversalTypes.indexOf(typedRow.reputation_history_type) >= 0) {
+                                const reversalType =
+                                    automaticallyReversed.indexOf(typedRow) >= 0
+                                        ? 'Automatically reversed'
+                                        : typedRow.reputation_history_type === 'vote_fraud_reversal'
+                                            ? 'Manually reversed'
+                                            : 'User deleted';
+
                                 const bucketHeader = $(`
                                 <tr class="detailed_reputation_table_header">
-                                    <td colspan="7">
+                                    <td colspan="5">
                                         Group ${String.fromCharCode(65 + bucketIndex)}
-                                        (${bucket.length} events, ${bucket.reduce((p, c) => p + c.reputation_change, 0)} reputation)
+                                        (${bucket.length} events, ${bucket.reduce((p, c) => p + c.reputation_change, 0)} reputation) - ${reversalType}
                                     </td>
                                 </tr>
                                 `);
                                 bucketHeader.css('background-color', bucketColour);
                                 tableBody.append(bucketHeader);
 
-                                if (votesDataPromise) {
+                                if (votesDataPromise && showReversedUser) {
                                     votesDataPromise.then(votesData => {
-                                        const userInfo = $('.voters.sorter:eq(2)', votesData).find('[title="2018-08-13 01:35:35Z"]').closest('tr').find('.user-info');
-                                        const gravatar = userInfo.find('.gravatar-wrapper-32');
-                                        const userLink = userInfo.find('.user-details > a');
+                                        const dates = typedRow.bucket.map(p => p.creation_date)
+                                            .filter((value, index, self) => self.indexOf(value) === index); // Makes distinct (https://stackoverflow.com/questions/1960473)
+
                                         const cell = bucketHeader.find('td');
-                                        cell.append(gravatar.css('display', 'inline-block'));
-                                        cell.append(userLink);
+
+                                        const userIds: number[] = [];
+                                        dates.forEach(date => {
+                                            const dateFormat = moment.unix(date)
+                                                .utc()
+                                                .format('YYYY-MM-DD HH:mm:ss') + 'Z';
+
+                                            const userInfos = $('.voters.sorter:eq(2)', votesData).find('[title="' + dateFormat + '"]').closest('tr').find('.user-info');
+                                            userInfos.each((_, userInfo) => {
+                                                const jUserInfo = $(userInfo);
+                                                const gravatar = jUserInfo.find('.gravatar-wrapper-32');
+                                                const userLink = jUserInfo.find('.user-details > a');
+
+                                                const userIdRegexMatch = userLink.attr('href').match(/\/users\/(\d+)\//);
+                                                if (userIdRegexMatch) {
+                                                    const votingUserId = parseInt(userIdRegexMatch[1], 10);
+                                                    if (userIds.indexOf(votingUserId) < 0) {
+                                                        const userDiv = $('<div class="user-details-div">');
+                                                        userDiv.append(gravatar.css('display', 'inline-block'));
+                                                        userDiv.append(userLink);
+                                                        cell.append(userDiv);
+                                                        userIds.push(votingUserId);
+                                                    }
+                                                }
+                                            });
+                                        });
                                     });
                                 }
                                 bucketHeader.css('background-color', bucketColour);
@@ -240,9 +303,9 @@ $(() => {
                                 <td colspan="7">
                                     Group ${String.fromCharCode(65 + bucketIndex)}
                                     (${bucket.filter(b => !b.canIgnore).length} events (${bucket.length} total), ${bucket.reduce((p, c) => p + c.reputation_change, 0)} reputation)
-                                    (${bucket.reduce((p, c) => p + (deletionEvents.find(i => i.post_id === c.post_id) == null ? 0 : 1), 0)} UD)
-                                    (${bucket.reduce((p, c) => p + (automaticallyReversed.find(i => i.post_id === c.post_id && (i.creation_date - typedRow.creation_date <= 60 * 60 * 24)) == null ? 0 : 1), 0)} AR)
-                                    (${bucket.reduce((p, c) => p + (manuallyReversed.find(i => i.post_id === c.post_id) == null ? 0 : 1), 0)} MR)
+                                    (${bucket.reduce((p, c) => p + (deletionEvents.find(i => postHasDeletion(i, c)) == null ? 0 : 1), 0)} UD)
+                                    (${bucket.reduce((p, c) => p + (automaticallyReversed.find(i => postHasAutomaticReversal(i, c)) == null ? 0 : 1), 0)} AR)
+                                    (${bucket.reduce((p, c) => p + (manuallyReversed.find(i => postHasManualReversal(i, c)) == null ? 0 : 1), 0)} MR)
                                 </td>
                             </tr>
                             `);
@@ -253,16 +316,20 @@ $(() => {
 
                         htmlRow.css('background-color', bucketColour);
 
-                        if (deletionEvents.find(i => i.post_id === typedRow.post_id)) {
-                            htmlRow.find('.user-deleted').text('UD');
-                        }
-                        if (automaticallyReversed.find(i => i.post_id === typedRow.post_id
-                            // Automatic reversals will only apply to votes cast within the last 24 hours
-                            && (i.creation_date - typedRow.creation_date <= 60 * 60 * 24))) {
-                            htmlRow.find('.user-deleted').text('AR');
-                        }
-                        if (manuallyReversed.find(i => i.post_id === typedRow.post_id)) {
-                            htmlRow.find('.user-deleted').text('MR');
+                        const rowReversalTypes = [];
+
+                        if (reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
+                            if (deletionEvents.find(i => postHasDeletion(i, typedRow))) {
+                                rowReversalTypes.push('UD');
+                            }
+                            if (automaticallyReversed.find(i => postHasAutomaticReversal(i, typedRow))) {
+                                rowReversalTypes.push('AR');
+                            }
+                            if (manuallyReversed.find(i => postHasManualReversal(i, typedRow))) {
+                                rowReversalTypes.push('MR');
+                            }
+
+                            htmlRow.find('.reversal-type').text(rowReversalTypes.join(' '));
                         }
                     }
 

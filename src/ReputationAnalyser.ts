@@ -8,7 +8,7 @@ export type ReputationEventDetails = ReputationEvent & {
 
 const groupableEventTypes = ['post_upvoted', 'user_deleted', 'post_unupvoted', 'vote_fraud_reversal'];
 
-export function SortItems(items: ReputationEvent[]) {
+function SortItems(items: ReputationEvent[]) {
     items.sort((a, b) => {
         const dateDiff = b.creation_date - a.creation_date;
         if (dateDiff !== 0) {
@@ -66,6 +66,9 @@ export function ProcessItems(items: ReputationEvent[], secondsGap: number): Repu
                 reputationEventDetails.firstInBucket = true;
             }
 
+            // When we see an upvote, check if there's an unupvote that happened afterwards for the same post
+            // If there were, we strikethrough each event.
+            // Since we only check the same bucket, we won't be striking out unrelated votes (usually)
             if (item.reputation_history_type === 'post_upvoted') {
                 const unupvote = matchingBucket.find(b =>
                     b.post_id === item.post_id

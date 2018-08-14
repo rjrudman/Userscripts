@@ -1,4 +1,4 @@
-import { ReputationEvent, ApiResponse } from 'ReptuationApiResponse';
+import { ReputationEvent } from 'ReptuationApiResponse';
 
 let page = 0;
 let data: ReputationData | null = null;
