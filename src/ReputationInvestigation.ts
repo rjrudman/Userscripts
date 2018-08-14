@@ -1,6 +1,5 @@
 import { ApiResponse, ReputationEvent } from 'ReptuationApiResponse';
 import { AddStyleText } from 'Tools';
-import * as moment from 'moment';
 import { ProcessItems, ReputationEventDetails } from 'ReputationAnalyser';
 import { GetCurrentReputationPage, GetNextReputationPage } from 'ReputationFixer';
 import { __values } from '../node_modules/tslib';
@@ -75,15 +74,22 @@ $(() => {
                 $(detailedLink).addClass('youarehere');
                 RenderDetailedReputation(45, 3, false);
 
+                const linkToXref = $(`<a style="margin-left: 5px" href="https://stackoverflow.com/admin/xref-user-ips/${userId}" target="_blank">xref</a>`);
+                const linkToVotes = $(`<a href="https://stackoverflow.com/admin/show-user-votes/${userId}" target="_blank">votes</a>`);
                 const showVoters = $('<input type="checkbox" id="chkShowReversedUser">');
                 const showVotersLabel = $('<label for="chkShowReversedUser" style="margin-right: 15px; margin-left: 15px;">Show reversed user</label>');
+                $('#stats').prepend(linkToXref);
+                $('#stats').prepend(linkToVotes);
                 $('#stats').prepend(showVoters);
                 $('#stats').prepend(showVotersLabel);
                 if (!StackExchange.options.user.isModerator) {
-                    showVoters.hide();
-                    showVotersLabel.hide();
+                    linkToXref.remove();
+                    linkToVotes.remove();
+                    showVoters.remove();
+                    showVotersLabel.remove();
                 }
 
+                // https://stackoverflow.com/admin/show-user-votes/8077972
                 const bucketSizeInput = $('<input type="number" value="3" />');
                 $('#stats').prepend(bucketSizeInput);
                 $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Set minimum bucket size</label>');
