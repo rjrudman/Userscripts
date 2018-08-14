@@ -120,15 +120,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     var linkToVotes = $("<a href=\"https://stackoverflow.com/admin/show-user-votes/" + userId + "\" target=\"_blank\">votes</a>");
                     var showVoters_1 = $('<input type="checkbox" id="chkShowReversedUser">');
                     var showVotersLabel = $('<label for="chkShowReversedUser" style="margin-right: 15px; margin-left: 15px;">Show reversed user</label>');
-                    $('#stats').prepend(linkToXref);
-                    $('#stats').prepend(linkToVotes);
-                    $('#stats').prepend(showVoters_1);
-                    $('#stats').prepend(showVotersLabel);
-                    if (!StackExchange.options.user.isModerator) {
-                        linkToXref.remove();
-                        linkToVotes.remove();
-                        showVoters_1.remove();
-                        showVotersLabel.remove();
+                    if (StackExchange.options.user.isModerator) {
+                        $('#stats').prepend(linkToXref);
+                        $('#stats').prepend(linkToVotes);
+                        $('#stats').prepend(showVoters_1);
+                        $('#stats').prepend(showVotersLabel);
                     }
                     // https://stackoverflow.com/admin/show-user-votes/8077972
                     var bucketSizeInput_1 = $('<input type="number" value="3" />');
