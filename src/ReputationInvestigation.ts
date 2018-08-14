@@ -411,7 +411,7 @@ $(() => {
 
                             if (partialVoteReversed === 1) {
                                 rowReversalTypes.unshift('❌');
-                            } else if (partialVoteReversed < 0) {
+                            } else if (partialVoteReversed <= 0) {
                                 rowReversalTypes.unshift('✅');
                             }
 

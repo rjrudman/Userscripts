@@ -364,7 +364,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 if (partialVoteReversed === 1) {
                                     rowReversalTypes.unshift('❌');
                                 }
-                                else if (partialVoteReversed < 0) {
+                                else if (partialVoteReversed <= 0) {
                                     rowReversalTypes.unshift('✅');
                                 }
                                 htmlRow.find('.reversal-type').text(rowReversalTypes.join(' '));
@@ -487,6 +487,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     });
                     if (unupvote) {
                         unupvote.canIgnore = true;
+                        reputationEventDetails.canIgnore = true;
+                    }
+                }
+                // Same goes for unupvotes. If they unupvote and the upvote, we can ignore it
+                if (item.reputation_history_type === 'post_unupvoted') {
+                    var upvte = matchingBucket.find(function (b) {
+                        return b.post_id === item.post_id
+                            && b.reputation_history_type === 'post_upvoted'
+                            && b.creation_date >= item.creation_date
+                            && !b.canIgnore;
+                    });
+                    if (upvte) {
+                        upvte.canIgnore = true;
                         reputationEventDetails.canIgnore = true;
                     }
                 }

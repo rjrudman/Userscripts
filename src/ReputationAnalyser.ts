@@ -84,6 +84,21 @@ export function ProcessIntoBuckets(items: ReputationEvent[], secondsGap: number)
                 }
             }
 
+            // Same goes for unupvotes. If they unupvote and the upvote, we can ignore it
+            if (item.reputation_history_type === 'post_unupvoted') {
+                const upvte = matchingBucket.find(b =>
+                    b.post_id === item.post_id
+                    && b.reputation_history_type === 'post_upvoted'
+                    && b.creation_date >= item.creation_date
+                    && !b.canIgnore
+                );
+
+                if (upvte) {
+                    upvte.canIgnore = true;
+                    reputationEventDetails.canIgnore = true;
+                }
+            }
+
             const typedBucket = matchingBucket as ReputationEventDetails[];
             reputationEventDetails.bucket = typedBucket;
             reputationEventDetails.vote_id = i++;
