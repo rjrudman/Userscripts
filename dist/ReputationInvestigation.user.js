@@ -195,7 +195,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         }
                         return false;
                     });
-                    if (showReversedUser && deletionEvents.length && votesDataPromise == null && StackExchange.options.user.isModerator) {
+                    if (showReversedUser && copiedData.items.find(function (s) { return reversalTypes.indexOf(s.reputation_history_type) >= 0; })
+                        && votesDataPromise == null && StackExchange.options.user.isModerator) {
                         var votesPage = "/admin/show-user-votes/" + userId;
                         votesDataPromise = fetch(votesPage).then(function (r) { return r.text(); });
                     }

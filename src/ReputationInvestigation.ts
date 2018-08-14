@@ -154,6 +154,7 @@ $(() => {
 
                 const reversalTypes = ['user_deleted', 'vote_fraud_reversal'];
                 const deletionEvents = copiedData.items.filter(s => s.reputation_history_type === 'user_deleted');
+
                 const automaticallyReversed = copiedData.items.filter(s => {
                     const date = moment.unix(s.creation_date).utc();
                     if (s.reputation_history_type === 'vote_fraud_reversal') {
@@ -173,7 +174,8 @@ $(() => {
                     return false;
                 });
 
-                if (showReversedUser && deletionEvents.length && votesDataPromise == null && StackExchange.options.user.isModerator) {
+                if (showReversedUser && copiedData.items.find(s => reversalTypes.indexOf(s.reputation_history_type) >= 0)
+                    && votesDataPromise == null && StackExchange.options.user.isModerator) {
                     const votesPage = `/admin/show-user-votes/${userId}`;
                     votesDataPromise = fetch(votesPage).then(r => r.text());
                 }
