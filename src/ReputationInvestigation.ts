@@ -44,7 +44,14 @@ const css = `
 `;
 
 function getBucketColour(index: number, numBuckets: number) {
-    const cssHSL = 'hsla(' + (360 / numBuckets) * index + ', 80%, 50%, 0.3)';
+    // We alternate between starting from the start and the back,
+    // so that similar colours are not placed next to eachother
+
+    const colourNum = index % 2 === 0
+        ? (360 / numBuckets) * index
+        : 360 - ((360 / numBuckets) * index);
+
+    const cssHSL = 'hsla(' + colourNum + ', 80%, 50%, 0.3)';
     return cssHSL;
 }
 
