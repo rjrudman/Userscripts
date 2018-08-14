@@ -327,15 +327,25 @@ $(() => {
 
                         const rowReversalTypes = [];
 
-                        if (reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
-                            if (deletionEvents.find(i => postHasDeletion(i, typedRow))) {
-                                rowReversalTypes.push('UD');
+                        if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
+                            const allData = (Array.prototype.concat.apply([], acceptableBuckets) as ReputationEventDetails[])
+                                .filter(d => d.post_id === typedRow.post_id && !d.canIgnore);
+
+                            const countAll = (src: ReputationEvent[], func: (reversal: ReputationEvent, current: ReputationEvent) => boolean) => {
+                                return allData.filter(i => src.find(di => func(di, i))).length;
+                            };
+
+                            const matchingDeletions = deletionEvents.filter(i => postHasDeletion(i, typedRow)).length;
+                            if (matchingDeletions > 0) {
+                                rowReversalTypes.push(`UD (${matchingDeletions}/${countAll(deletionEvents, postHasDeletion)})`);
                             }
-                            if (automaticallyReversed.find(i => postHasAutomaticReversal(i, typedRow))) {
-                                rowReversalTypes.push('AR');
+                            const matchingAutomaticReversals = automaticallyReversed.filter(i => postHasAutomaticReversal(i, typedRow)).length;
+                            if (matchingAutomaticReversals > 0) {
+                                rowReversalTypes.push(`AR (${matchingAutomaticReversals}/${countAll(automaticallyReversed, postHasAutomaticReversal)})`);
                             }
-                            if (manuallyReversed.find(i => postHasManualReversal(i, typedRow))) {
-                                rowReversalTypes.push('MR');
+                            const matchingManualReversals = manuallyReversed.filter(i => postHasManualReversal(i, typedRow)).length;
+                            if (matchingManualReversals) {
+                                rowReversalTypes.push(`MR (${matchingManualReversals}/${countAll(manuallyReversed, postHasManualReversal)})`);
                             }
 
                             htmlRow.find('.reversal-type').text(rowReversalTypes.join(' '));

@@ -307,15 +307,23 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             }
                             htmlRow.css('background-color', bucketColour);
                             var rowReversalTypes = [];
-                            if (reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
-                                if (deletionEvents.find(function (i) { return postHasDeletion_1(i, typedRow); })) {
-                                    rowReversalTypes.push('UD');
+                            if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
+                                var allData_1 = Array.prototype.concat.apply([], acceptableBuckets)
+                                    .filter(function (d) { return d.post_id === typedRow.post_id && !d.canIgnore; });
+                                var countAll = function (src, func) {
+                                    return allData_1.filter(function (i) { return src.find(function (di) { return func(di, i); }); }).length;
+                                };
+                                var matchingDeletions = deletionEvents.filter(function (i) { return postHasDeletion_1(i, typedRow); }).length;
+                                if (matchingDeletions > 0) {
+                                    rowReversalTypes.push("UD (" + matchingDeletions + "/" + countAll(deletionEvents, postHasDeletion_1) + ")");
                                 }
-                                if (automaticallyReversed.find(function (i) { return postHasAutomaticReversal_1(i, typedRow); })) {
-                                    rowReversalTypes.push('AR');
+                                var matchingAutomaticReversals = automaticallyReversed.filter(function (i) { return postHasAutomaticReversal_1(i, typedRow); }).length;
+                                if (matchingAutomaticReversals > 0) {
+                                    rowReversalTypes.push("UD (" + matchingAutomaticReversals + "/" + countAll(automaticallyReversed, postHasAutomaticReversal_1) + ")");
                                 }
-                                if (manuallyReversed.find(function (i) { return postHasManualReversal_1(i, typedRow); })) {
-                                    rowReversalTypes.push('MR');
+                                var matchingManualReversals = manuallyReversed.filter(function (i) { return postHasManualReversal_1(i, typedRow); }).length;
+                                if (matchingManualReversals) {
+                                    rowReversalTypes.push("UD (" + matchingManualReversals + "/" + countAll(manuallyReversed, postHasManualReversal_1) + ")");
                                 }
                                 htmlRow.find('.reversal-type').text(rowReversalTypes.join(' '));
                             }
