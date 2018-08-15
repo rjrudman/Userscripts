@@ -7,8 +7,12 @@ export type ReputationEventDetails = ReputationEvent & {
     canIgnore?: boolean; // For example, upvote/unupvote at the same time
 };
 
-const groupableEventTypes = ['post_upvoted', 'post_unupvoted', 'post_downvoted', 'post_undownvoted', 'user_deleted', 'vote_fraud_reversal',
-    'asker_unaccept_answer', 'asker_accepts_answer'];
+const groupableEventTypes = [
+    'post_upvoted', 'post_unupvoted',
+    'post_downvoted', 'post_undownvoted',
+    'asker_unaccept_answer', 'asker_accepts_answer',
+    'user_deleted', 'vote_fraud_reversal',
+];
 
 function SortItems(items: ReputationEvent[]) {
     items.sort((a, b) => {
@@ -45,7 +49,8 @@ export function ProcessIntoBuckets(items: ReputationEvent[], secondsGap: number)
 
                 if (item.reputation_history_type === 'vote_fraud_reversal') {
                     // Reversals won't affect the same post twice
-                    if (bucket.find(event => event.post_id === item.post_id)) {
+                    // Except for unaccepts, in which case we can tell the difference due to the reputation amount
+                    if (bucket.find(event => event.reputation_change === item.reputation_change && event.post_id === item.post_id)) {
                         return false;
                     }
                 }

@@ -178,6 +178,10 @@ $(() => {
                             return true;
                         }
                     }
+                    if (s.reputation_history_type === 'asker_unaccept_answer') {
+                        const typedS = s as ReputationEventDetails;
+                        return typedS.bucket.find(f => f.reputation_history_type === 'vote_fraud_reversal');
+                    }
                     return false;
                 });
                 const manuallyReversed = copiedData.items.filter(s => {
@@ -186,6 +190,10 @@ $(() => {
                         if (date.minute() > 5 || date.hour() !== 3) {
                             return true;
                         }
+                    }
+                    if (s.reputation_history_type === 'asker_unaccept_answer') {
+                        const typedS = s as ReputationEventDetails;
+                        return typedS.bucket.find(f => f.reputation_history_type === 'vote_fraud_reversal');
                     }
                     return false;
                 });
@@ -362,7 +370,7 @@ $(() => {
                             }
                         }
 
-                        if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
+                        if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0 && typedRow.reputation_history_type !== 'asker_unaccept_answer') {
                             const allData = (Array.prototype.concat.apply([], acceptableBuckets) as ReputationEventDetails[])
                                 .filter(d => reversalTypes.indexOf(d.reputation_history_type) < 0)
                                 .filter(d => d.post_id === typedRow.post_id && !d.canIgnore);
@@ -400,10 +408,14 @@ $(() => {
                                 .filter((value, index, self) => self.indexOf(value) === index) // Makes distinct (https://stackoverflow.com/questions/1960473)
                                 .length;
 
-                            const partialVoteReversed =
+                            let partialVoteReversed =
                                 allOtherVotes === 0 ?
                                     1 :
                                     1 - ((matchingDeletions + matchingAutomaticReversals + matchingManualReversals) / allOtherVotes);
+
+                            if (partialVoteReversed > 1) {
+                                partialVoteReversed = 1;
+                            }
 
                             totalVotes++;
                             totalVotesReversed += partialVoteReversed;

@@ -6,7 +6,7 @@ export interface ApiResponse {
 }
 
 export interface ReputationEvent {
-    reputation_history_type: 'post_upvoted' | 'user_deleted' | 'post_unupvoted' | 'vote_fraud_reversal' | 'association_bonus';
+    reputation_history_type: 'post_upvoted' | 'user_deleted' | 'post_unupvoted' | 'vote_fraud_reversal' | 'association_bonus' | 'asker_unaccept_answer';
     reputation_change: number;
     post_id: number;
     creation_date: number;

@@ -185,6 +185,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 return true;
                             }
                         }
+                        if (s.reputation_history_type === 'asker_unaccept_answer') {
+                            var typedS = s;
+                            return typedS.bucket.find(function (f) { return f.reputation_history_type === 'vote_fraud_reversal'; });
+                        }
                         return false;
                     });
                     var manuallyReversed = copiedData.items.filter(function (s) {
@@ -193,6 +197,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                             if (date.minute() > 5 || date.hour() !== 3) {
                                 return true;
                             }
+                        }
+                        if (s.reputation_history_type === 'asker_unaccept_answer') {
+                            var typedS = s;
+                            return typedS.bucket.find(function (f) { return f.reputation_history_type === 'vote_fraud_reversal'; });
                         }
                         return false;
                     });
@@ -325,7 +333,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                     htmlRow.find('#rep-change').text(htmlRow.find('#rep-change').text() + ' (' + actualReputationChange + ')');
                                 }
                             }
-                            if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0) {
+                            if (!typedRow.canIgnore && reversalTypes.indexOf(typedRow.reputation_history_type) < 0 && typedRow.reputation_history_type !== 'asker_unaccept_answer') {
                                 var allData_1 = Array.prototype.concat.apply([], acceptableBuckets)
                                     .filter(function (d) { return reversalTypes.indexOf(d.reputation_history_type) < 0; })
                                     .filter(function (d) { return d.post_id === typedRow.post_id && !d.canIgnore; });
@@ -358,6 +366,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                                 var partialVoteReversed = allOtherVotes === 0 ?
                                     1 :
                                     1 - ((matchingDeletions + matchingAutomaticReversals + matchingManualReversals) / allOtherVotes);
+                                if (partialVoteReversed > 1) {
+                                    partialVoteReversed = 1;
+                                }
                                 totalVotes++;
                                 totalVotesReversed += partialVoteReversed;
                                 totalReptuationReversed += actualReputationChange * (partialVoteReversed);
@@ -424,8 +435,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var groupableEventTypes = ['post_upvoted', 'post_unupvoted', 'post_downvoted', 'post_undownvoted', 'user_deleted', 'vote_fraud_reversal',
-        'asker_unaccept_answer', 'asker_accepts_answer'];
+    var groupableEventTypes = [
+        'post_upvoted', 'post_unupvoted',
+        'post_downvoted', 'post_undownvoted',
+        'asker_unaccept_answer', 'asker_accepts_answer',
+        'user_deleted', 'vote_fraud_reversal',
+    ];
     function SortItems(items) {
         items.sort(function (a, b) {
             var dateDiff = b.creation_date - a.creation_date;
@@ -457,7 +472,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     if (item.reputation_history_type === 'vote_fraud_reversal') {
                         // Reversals won't affect the same post twice
-                        if (bucket.find(function (event) { return event.post_id === item.post_id; })) {
+                        // Except for unaccepts, in which case we can tell the difference due to the reputation amount
+                        if (bucket.find(function (event) { return event.reputation_change === item.reputation_change && event.post_id === item.post_id; })) {
                             return false;
                         }
                     }
