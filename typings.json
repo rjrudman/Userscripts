@@ -1,6 +1,7 @@
 {
   "globalDependencies": {
-    "jquery": "registry:dt/jquery#1.10.0+20170310222111"
+    "jquery": "registry:dt/jquery#1.10.0+20170310222111",
+    "moment": "registry:dt/moment#2.11.1+20161010105546"
   },
   "globalDevDependencies": {
     "moment": "registry:dt/moment#2.11.1+20161010105546"

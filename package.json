@@ -2,15 +2,23 @@
   "name": "ReputationInvestigation",
   "version": "1.1.0",
   "scripts": {
-    "build": "tslint src/**/*.ts{,x} && webpack && concat-cli -f src/UserScriptDeclaration.js dist/out.js -o dist/ReputationInvestigation.user.js && concat-cli -f src/UserScriptDeclaration.js dist/out.min.js -o dist/ReputationInvestigation.min.user.js"
+    "build": "tslint src/**/*.ts{,x} && webpack && concat-cli -f src/UserScriptDeclaration.js dist/out.js -o dist/ReputationInvestigation.user.js && concat-cli -f src/UserScriptDeclaration.js dist/out.min.js -o dist/ReputationInvestigation.min.user.js",
+    "test": "cross-env TS_NODE_PROJECT=tsconfig.test.json mocha -r ts-node/register **/*.spec.ts"
   },
   "author": "Robert Rudman <rjrudman@gmail.com> (https://github.com/rjrudman)",
   "license": "ISC",
   "devDependencies": {
+    "@types/chai": "^4.1.4",
+    "@types/mocha": "^5.2.5",
     "awesome-typescript-loader": "3.4.1",
+    "chai": "^4.1.2",
     "concat-cli": "4.0.0",
+    "cross-env": "^5.2.0",
+    "mocha": "^5.2.0",
+    "moment": "^2.22.2",
     "rxjs": "5.5.2",
     "ts-loader": "3.2.0",
+    "ts-node": "^7.0.1",
     "tslib": "1.8.0",
     "tslint": "5.8.0",
     "typescript": "2.6.2",

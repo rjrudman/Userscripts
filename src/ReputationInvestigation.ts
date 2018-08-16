@@ -2,7 +2,6 @@ import { ApiResponse, ReputationEvent } from 'ReptuationApiResponse';
 import { AddStyleText } from 'Tools';
 import { ProcessIntoBuckets, ReputationEventDetails } from 'ReputationAnalyser';
 import { GetCurrentReputationPage, GetNextReputationPage } from 'ReputationFixer';
-import { __values } from '../node_modules/tslib';
 
 declare var StackExchange: any;
 

@@ -527,6 +527,86 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         return buckets;
     }
     exports.ProcessIntoBuckets = ProcessIntoBuckets;
+    function ProcessMetaData(items, acceptableBuckets, moment) {
+        var reversalTypes = ['user_deleted', 'vote_fraud_reversal'];
+        var deletionEvents = items.filter(function (s) { return s.reputation_history_type === 'user_deleted'; });
+        var automaticallyReversed = items.filter(function (s) {
+            var date = moment.unix(s.creation_date).utc();
+            if (s.reputation_history_type === 'vote_fraud_reversal') {
+                if (date.minute() <= 5 && date.hour() === 3) {
+                    return true;
+                }
+            }
+            if (s.reputation_history_type === 'asker_unaccept_answer') {
+                var typedS = s;
+                return typedS.bucket.find(function (f) { return f.reputation_history_type === 'vote_fraud_reversal'; });
+            }
+            return false;
+        });
+        var manuallyReversed = items.filter(function (s) {
+            var date = moment.unix(s.creation_date).utc();
+            if (s.reputation_history_type === 'vote_fraud_reversal') {
+                if (date.minute() > 5 || date.hour() !== 3) {
+                    return true;
+                }
+            }
+            if (s.reputation_history_type === 'asker_unaccept_answer') {
+                var typedS = s;
+                return typedS.bucket.find(function (f) { return f.reputation_history_type === 'vote_fraud_reversal'; });
+            }
+            return false;
+        });
+        items.forEach(function (typedRow) {
+            var allData = Array.prototype.concat.apply([], acceptableBuckets)
+                .filter(function (d) { return reversalTypes.indexOf(d.reputation_history_type) < 0; })
+                .filter(function (d) { return d.post_id === typedRow.post_id && !d.canIgnore; });
+            var postHasDeletion = function (reversal, current) {
+                return reversal.post_id === current.post_id
+                    && reversal.creation_date > current.creation_date;
+            };
+            var postHasAutomaticReversal = function (reversal, current) {
+                return reversal.post_id === current.post_id && (reversal.creation_date - typedRow.creation_date <= 60 * 60 * 24)
+                    && reversal.creation_date > current.creation_date;
+            };
+            var postHasManualReversal = function (reversal, current) { return reversal.post_id === current.post_id
+                && reversal.creation_date > current.creation_date; };
+            var findAll = function (src, func) {
+                return allData.filter(function (i) { return src.find(function (di) { return func(di, i); }); });
+            };
+            var countAll = function (src, func) {
+                return findAll(src, func).length;
+            };
+            var matchingDeletions = deletionEvents.filter(function (i) { return postHasDeletion(i, typedRow); }).length;
+            typedRow.Reversals = [];
+            if (matchingDeletions > 0) {
+                var allVotes = countAll(deletionEvents, postHasDeletion);
+                typedRow.Reversals.push({
+                    ReversalName: 'UD',
+                    MatchingReversals: matchingDeletions,
+                    AllSuspiciousVotes: allVotes
+                });
+            }
+            var matchingAutomaticReversals = automaticallyReversed.filter(function (i) { return postHasAutomaticReversal(i, typedRow); }).length;
+            if (matchingAutomaticReversals > 0) {
+                var allVotes = countAll(automaticallyReversed, postHasAutomaticReversal);
+                typedRow.Reversals.push({
+                    ReversalName: 'AR',
+                    MatchingReversals: matchingAutomaticReversals,
+                    AllSuspiciousVotes: allVotes
+                });
+            }
+            var matchingManualReversals = manuallyReversed.filter(function (i) { return postHasManualReversal(i, typedRow); }).length;
+            if (matchingManualReversals) {
+                var allVotes = countAll(manuallyReversed, postHasManualReversal);
+                typedRow.Reversals.push({
+                    ReversalName: 'MR',
+                    MatchingReversals: matchingManualReversals,
+                    AllSuspiciousVotes: allVotes
+                });
+            }
+        });
+    }
+    exports.ProcessMetaData = ProcessMetaData;
 }).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
