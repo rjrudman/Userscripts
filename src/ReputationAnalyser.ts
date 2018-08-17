@@ -1,4 +1,5 @@
 import { ReputationEvent } from './ReptuationApiResponse';
+import { MomentStatic } from './Misc/MomentInterface';
 
 export type ReputationEventDetails = ReputationEvent & {
     bucket: ReputationEventDetails[];
@@ -112,7 +113,7 @@ export function ProcessIntoBuckets(items: ReputationEvent[], secondsGap: number)
     return buckets;
 }
 
-export function ProcessMetaData(items: ReputationEventDetails[], acceptableBuckets: ReputationEventDetails[][], moment: moment.MomentStatic) {
+export function ProcessMetaData(items: ReputationEventDetails[], acceptableBuckets: ReputationEventDetails[][], moment: MomentStatic) {
     const reversalTypes = ['user_deleted', 'vote_fraud_reversal'];
 
     const deletionEvents = items.filter(s => s.reputation_history_type === 'user_deleted');
