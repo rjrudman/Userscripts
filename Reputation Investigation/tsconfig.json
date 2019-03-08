@@ -4,8 +4,14 @@
     "importHelpers": true,
     "isolatedModules": true,
     "sourceMap": false,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
     "declaration": false,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
@@ -13,15 +19,14 @@
     "downlevelIteration": true,
     "strict": true,
     "outDir": "./dist",
-    "module": "commonjs",
+    "module": "amd",
     "target": "es5",
     "lib": [
       "es2015",
       "dom"
     ],
-    "baseUrl": "src",
+    "baseUrl": "./src",
     "paths": {
-      "@userscriptTools/*": ["Libs/UserscriptTools/*"]
     }
   }
 }

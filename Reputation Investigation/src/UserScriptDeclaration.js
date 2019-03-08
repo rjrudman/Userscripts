@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Reputation Investigation
-// @namespace    https://gitlab.com/rjrudman/ReputationInvestigation
-// @version      0.0.0
-// @author       Robert Rudman
+// @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
+// @version      2.0.0
+// @author       Rob
 // @match        *://*.stackexchange.com/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
 // @match        *://*.superuser.com/*/*?tab=reputation*

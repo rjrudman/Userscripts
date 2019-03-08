@@ -1,6 +1,8 @@
-/dist/out.js
-/dist/out.min.js
-dist/packed.js
+Reputation Investigation/dist/out.js
+Reputation Investigation/dist/out.min.js
+Reputation Investigation/dist/packed.js
 
-/npm-debug.log
-/node_modules
+Reputation Investigation/npm-debug.log
+Reputation Investigation/node_modules
+Reputation Investigation/.nyc_output
+Reputation Investigation/coverage

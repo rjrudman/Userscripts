@@ -1,0 +1,10 @@
+{
+    "mocha.files.glob": "test/**/*.spec.ts",
+    "mocha.env": {
+        "TS_NODE_PROJECT": "tsconfig.test.json"
+    },
+    "mocha.requires": [
+        "ts-node/register"
+    ],
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+}
