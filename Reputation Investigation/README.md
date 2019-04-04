@@ -9,4 +9,4 @@
 
     npm run build
     
-The distributable file is found under `/dist/Socky.user.js` or `/dist/Socky.min.user.js` and can be pasted directly into tamper monkey.
+The distributable file is found under `/dist/ReputationInvestigation.user.js` or `/dist/ReputationInvestigation.min.user.js` and can be pasted directly into tamper monkey.
