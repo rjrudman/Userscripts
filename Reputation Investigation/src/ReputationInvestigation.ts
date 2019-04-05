@@ -358,7 +358,8 @@ $(() => {
                 repPageContainer.append(newTable);
                 const votesNotFullyReversed =
                     events.filter(e =>
-                        e.IsBucketed
+                        !e.Cancelled
+                        && e.IsBucketed
                         && IsReversableType(e.reputation_history_type)
                         && e.ReversedBy.length <= e.Pairs)
                         .map(e => ({

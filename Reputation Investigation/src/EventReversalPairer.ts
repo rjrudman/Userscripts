@@ -6,6 +6,8 @@ interface ReversalData<T> {
     ReversedBy: EventWithReversalData<T>[];
     Pairs: number;
     OriginalEvent: ReputationEvent;
+
+    Cancelled: boolean;
 }
 
 export type EventWithReversalData<T> = ReversalData<T> & T;
@@ -50,13 +52,14 @@ function ReducePairs<T extends ReputationEvent>(events: EventWithReversalData<T>
     }
 }
 
-function ProcessEventPairing<T extends (ReputationEvent & { OriginalEvent?: T })>(events: T[]): EventWithReversalData<T>[] {
+function ProcessEventPairing<T extends (ReputationEvent & { OriginalEvent?: T, Cancelled?: boolean })>(events: T[]): EventWithReversalData<T>[] {
     const eventsWithMetaData = events.map(e => ({
         ...e,
         Reversed: [] as EventWithReversalData<T>[],
         ReversedBy: [] as EventWithReversalData<T>[],
         Pairs: 0,
-        OriginalEvent: e.OriginalEvent || e
+        OriginalEvent: e.OriginalEvent || e,
+        Cancelled: e.Cancelled || false
     }));
     const eventsByPostId = (postId: number) => eventsWithMetaData.filter(f => f.post_id === postId);
     for (const event of eventsWithMetaData) {
@@ -64,24 +67,26 @@ function ProcessEventPairing<T extends (ReputationEvent & { OriginalEvent?: T })
         const matchingFutureEvents = otherEventsForPost.filter(e => e.creation_date > event.creation_date);
 
         if (IsReversableType(event.reputation_history_type)) {
-            const reversalTypes = GetReversalTypes(event.reputation_history_type);
-            const reversals = matchingFutureEvents.filter(m =>
-                !!reversalTypes.find(reversalType => reversalType === m.reputation_history_type)
-                &&
-                (m.reputation_change === -1 * event.reputation_change
-                    || m.reputation_change === 0
-                    || event.reputation_change === 0
-                )
-            );
+            if (!event.Cancelled) {
+                const reversalTypes = GetReversalTypes(event.reputation_history_type);
+                const reversals = matchingFutureEvents.filter(m =>
+                    !!reversalTypes.find(reversalType => reversalType === m.reputation_history_type)
+                    &&
+                    (m.reputation_change === -1 * event.reputation_change
+                        || m.reputation_change === 0
+                        || event.reputation_change === 0
+                    )
+                );
 
-            for (const reversal of reversals) {
-                if (!reversal.ReversedBy) {
-                    reversal.ReversedBy = [];
+                for (const reversal of reversals) {
+                    if (!reversal.ReversedBy) {
+                        reversal.ReversedBy = [];
+                    }
+                    reversal.Reversed.push(event);
                 }
-                reversal.Reversed.push(event);
-            }
 
-            event.ReversedBy = reversals;
+                event.ReversedBy = reversals;
+            }
         }
     }
     return eventsWithMetaData;

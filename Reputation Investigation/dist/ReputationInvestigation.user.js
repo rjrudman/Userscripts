@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Reputation Investigation
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
-// @version      2.0.1
+// @version      2.0.2
 // @author       Rob
 // @match        *://*.stackexchange.com/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
@@ -716,7 +716,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     repPageContainer.append(newTable);
                     var votesNotFullyReversed = events.filter(function (e) {
-                        return e.IsBucketed
+                        return !e.Cancelled
+                            && e.IsBucketed
                             && EventTypes_1.IsReversableType(e.reputation_history_type)
                             && e.ReversedBy.length <= e.Pairs;
                     })
@@ -1118,38 +1119,40 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
     }
     function ProcessEventPairing(events) {
         var e_5, _a;
-        var eventsWithMetaData = events.map(function (e) { return (tslib_1.__assign({}, e, { Reversed: [], ReversedBy: [], Pairs: 0, OriginalEvent: e.OriginalEvent || e })); });
+        var eventsWithMetaData = events.map(function (e) { return (tslib_1.__assign({}, e, { Reversed: [], ReversedBy: [], Pairs: 0, OriginalEvent: e.OriginalEvent || e, Cancelled: e.Cancelled || false })); });
         var eventsByPostId = function (postId) { return eventsWithMetaData.filter(function (f) { return f.post_id === postId; }); };
         var _loop_2 = function (event_1) {
             var e_6, _a;
             var otherEventsForPost = eventsByPostId(event_1.post_id).filter(function (e) { return e !== event_1; });
             var matchingFutureEvents = otherEventsForPost.filter(function (e) { return e.creation_date > event_1.creation_date; });
             if (EventTypes_1.IsReversableType(event_1.reputation_history_type)) {
-                var reversalTypes_1 = EventTypes_1.GetReversalTypes(event_1.reputation_history_type);
-                var reversals = matchingFutureEvents.filter(function (m) {
-                    return !!reversalTypes_1.find(function (reversalType) { return reversalType === m.reputation_history_type; })
-                        &&
-                            (m.reputation_change === -1 * event_1.reputation_change
-                                || m.reputation_change === 0
-                                || event_1.reputation_change === 0);
-                });
-                try {
-                    for (var reversals_3 = tslib_1.__values(reversals), reversals_3_1 = reversals_3.next(); !reversals_3_1.done; reversals_3_1 = reversals_3.next()) {
-                        var reversal = reversals_3_1.value;
-                        if (!reversal.ReversedBy) {
-                            reversal.ReversedBy = [];
-                        }
-                        reversal.Reversed.push(event_1);
-                    }
-                }
-                catch (e_6_1) { e_6 = { error: e_6_1 }; }
-                finally {
+                if (!event_1.Cancelled) {
+                    var reversalTypes_1 = EventTypes_1.GetReversalTypes(event_1.reputation_history_type);
+                    var reversals = matchingFutureEvents.filter(function (m) {
+                        return !!reversalTypes_1.find(function (reversalType) { return reversalType === m.reputation_history_type; })
+                            &&
+                                (m.reputation_change === -1 * event_1.reputation_change
+                                    || m.reputation_change === 0
+                                    || event_1.reputation_change === 0);
+                    });
                     try {
-                        if (reversals_3_1 && !reversals_3_1.done && (_a = reversals_3.return)) _a.call(reversals_3);
+                        for (var reversals_3 = tslib_1.__values(reversals), reversals_3_1 = reversals_3.next(); !reversals_3_1.done; reversals_3_1 = reversals_3.next()) {
+                            var reversal = reversals_3_1.value;
+                            if (!reversal.ReversedBy) {
+                                reversal.ReversedBy = [];
+                            }
+                            reversal.Reversed.push(event_1);
+                        }
                     }
-                    finally { if (e_6) throw e_6.error; }
+                    catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                    finally {
+                        try {
+                            if (reversals_3_1 && !reversals_3_1.done && (_a = reversals_3.return)) _a.call(reversals_3);
+                        }
+                        finally { if (e_6) throw e_6.error; }
+                    }
+                    event_1.ReversedBy = reversals;
                 }
-                event_1.ReversedBy = reversals;
             }
         };
         try {
