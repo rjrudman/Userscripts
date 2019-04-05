@@ -373,7 +373,7 @@ $(() => {
                             <hr style="margin-bottom: 0px;" />
                             <table class="summary-table">
                                 <tr>
-                                    <td><p>Total votes</p>: ${events.filter(e => e.IsBucketed && IsReversableType(e.reputation_history_type)).length}</td>
+                                    <td><p>Total suspicious votes</p>: ${events.filter(e => e.IsBucketed && IsReversableType(e.reputation_history_type)).length}</td>
                                     <td><p>Votes not reversed</p>: ${Math.round(voteCount)}</td>
                                     <td><p>Reputation not reversed</p>: ${Math.round(reputationCount)}</td>
                                 </tr>
@@ -381,11 +381,19 @@ $(() => {
                             <hr style="margin-bottom: 0px;" />
                         `);
                 } else {
-                    repPageSummary.append(`
-                            <hr style="margin-bottom: 0px;" />
-                            <p style="margin-top: 5px; margin-bottom: 5px; margin-left: 5px;">All suspicious votes reversed</p>
-                            <hr style="margin-bottom: 0px;" />
-                        `);
+                    if (events.filter(e => e.IsBucketed).length === 0) {
+                        repPageSummary.append(`
+                        <hr style="margin-bottom: 0px;" />
+                        <p style="margin-top: 5px; margin-bottom: 5px; margin-left: 5px;">No suspicious votes detected</p>
+                        <hr style="margin-bottom: 0px;" />
+                    `);
+                    } else {
+                        repPageSummary.append(`
+                        <hr style="margin-bottom: 0px;" />
+                        <p style="margin-top: 5px; margin-bottom: 5px; margin-left: 5px;">All suspicious votes reversed</p>
+                        <hr style="margin-bottom: 0px;" />
+                    `);
+                    }
                 }
             });
         }

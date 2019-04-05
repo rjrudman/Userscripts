@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Reputation Investigation
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
-// @version      2.0.2
+// @version      2.0.3
 // @author       Rob
 // @match        *://*.stackexchange.com/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
@@ -728,10 +728,15 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     if (votesNotFullyReversed.length) {
                         var voteCount = votesNotFullyReversed.map(function (v) { return v.VoteSlice; }).reduce(function (left, right) { return left + right; }, 0);
                         var reputationCount = votesNotFullyReversed.map(function (v) { return v.Reputation; }).reduce(function (left, right) { return left + right; }, 0);
-                        repPageSummary.append("\n                            <hr style=\"margin-bottom: 0px;\" />\n                            <table class=\"summary-table\">\n                                <tr>\n                                    <td><p>Total votes</p>: " + events.filter(function (e) { return e.IsBucketed && EventTypes_1.IsReversableType(e.reputation_history_type); }).length + "</td>\n                                    <td><p>Votes not reversed</p>: " + Math.round(voteCount) + "</td>\n                                    <td><p>Reputation not reversed</p>: " + Math.round(reputationCount) + "</td>\n                                </tr>\n                            </table>\n                            <hr style=\"margin-bottom: 0px;\" />\n                        ");
+                        repPageSummary.append("\n                            <hr style=\"margin-bottom: 0px;\" />\n                            <table class=\"summary-table\">\n                                <tr>\n                                    <td><p>Total suspicious votes</p>: " + events.filter(function (e) { return e.IsBucketed && EventTypes_1.IsReversableType(e.reputation_history_type); }).length + "</td>\n                                    <td><p>Votes not reversed</p>: " + Math.round(voteCount) + "</td>\n                                    <td><p>Reputation not reversed</p>: " + Math.round(reputationCount) + "</td>\n                                </tr>\n                            </table>\n                            <hr style=\"margin-bottom: 0px;\" />\n                        ");
                     }
                     else {
-                        repPageSummary.append("\n                            <hr style=\"margin-bottom: 0px;\" />\n                            <p style=\"margin-top: 5px; margin-bottom: 5px; margin-left: 5px;\">All suspicious votes reversed</p>\n                            <hr style=\"margin-bottom: 0px;\" />\n                        ");
+                        if (events.filter(function (e) { return e.IsBucketed; }).length === 0) {
+                            repPageSummary.append("\n                        <hr style=\"margin-bottom: 0px;\" />\n                        <p style=\"margin-top: 5px; margin-bottom: 5px; margin-left: 5px;\">No suspicious votes detected</p>\n                        <hr style=\"margin-bottom: 0px;\" />\n                    ");
+                        }
+                        else {
+                            repPageSummary.append("\n                        <hr style=\"margin-bottom: 0px;\" />\n                        <p style=\"margin-top: 5px; margin-bottom: 5px; margin-left: 5px;\">All suspicious votes reversed</p>\n                        <hr style=\"margin-bottom: 0px;\" />\n                    ");
+                        }
                     }
                 });
             }
