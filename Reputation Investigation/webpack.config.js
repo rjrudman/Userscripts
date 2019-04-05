@@ -1,13 +1,14 @@
 var webpack = require('webpack');
 var UnminifiedWebpackPlugin = require('unminified-webpack-plugin');
 const { TsConfigPathsPlugin } = require('awesome-typescript-loader');
-
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
     entry: "./src/ReputationInvestigation.ts",
     target: "node",
+    mode: 'production',
     output: {
-        filename: "./dist/out.min.js"
+        filename: "./out.min.js"
     },
     resolve: {
         // Add '.ts' and '.tsx' as a resolvable extension.
@@ -17,15 +18,25 @@ module.exports = {
         ]
     },
     module: {
-        loaders: [
+        rules: [
             // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
             { test: /\.tsx?$/, loader: "ts-loader" }
         ]
     },
     plugins: [
-        new webpack.optimize.UglifyJsPlugin({
-            compress: { warnings: false }
-        }),
         new UnminifiedWebpackPlugin(),
-    ]
+    ],
+    optimization: {
+        minimizer: [
+            new UglifyJsPlugin({
+                cache: true,
+                parallel: true,
+                uglifyOptions: {
+                    compress: false,
+                    ecma: 6,
+                    mangle: true
+                }
+            })
+        ]
+    }
 }
