@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Reputation Investigation
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
-// @version      2.0.0
+// @version      2.0.1
 // @author       Rob
 // @match        *://*.stackexchange.com/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
@@ -519,10 +519,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                     }
                     var bucketSizeInput_1 = $('<input type="number" value="3" />');
                     $('#stats').prepend(bucketSizeInput_1);
-                    $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Set minimum bucket size</label>');
+                    $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Minimum number of votes</label>');
                     var numSecondsInput_1 = $('<input type="number" value="45" />');
                     $('#stats').prepend(numSecondsInput_1);
-                    $('#stats').prepend('<label style="margin-right: 15px;">Set number of seconds between votes</label>');
+                    $('#stats').prepend('<label style="margin-right: 15px;">Number of seconds between votes</label>');
                     var onChange = function () {
                         var numSeconds = parseInt(numSecondsInput_1.val(), 10);
                         var bucketSize = parseInt(bucketSizeInput_1.val(), 10);

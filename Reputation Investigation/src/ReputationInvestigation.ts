@@ -134,11 +134,11 @@ $(() => {
 
                 const bucketSizeInput = $('<input type="number" value="3" />');
                 $('#stats').prepend(bucketSizeInput);
-                $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Set minimum bucket size</label>');
+                $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Minimum number of votes</label>');
 
                 const numSecondsInput = $('<input type="number" value="45" />');
                 $('#stats').prepend(numSecondsInput);
-                $('#stats').prepend('<label style="margin-right: 15px;">Set number of seconds between votes</label>');
+                $('#stats').prepend('<label style="margin-right: 15px;">Number of seconds between votes</label>');
 
                 const onChange = () => {
                     const numSeconds = parseInt(numSecondsInput.val(), 10);
