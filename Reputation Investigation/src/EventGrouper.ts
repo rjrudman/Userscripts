@@ -97,7 +97,7 @@ function CanMergeToBucket<T extends ReputationEvent>(targetBucket: EventWithBuck
         return false;
     }
 
-    if (HasOppositePair(event.reputation_history_type)) {
+    if (HasOppositePair(event.reputation_history_type) && !event.Cancelled) {
         const oppositeVote = VoteOppositePairs[event.reputation_history_type];
         if (targetBucket.some(e =>
             oppositeVote === e.reputation_history_type
@@ -131,7 +131,7 @@ function CanMergeToBucket<T extends ReputationEvent>(targetBucket: EventWithBuck
 }
 
 function MergeToBucket<T extends ReputationEvent>(targetBucket: EventWithBucketData<T>[], sourceBucket: EventWithBucketData<T>[], event: EventWithBucketData<T>) {
-    if (HasOppositePair(event.reputation_history_type)) {
+    if (HasOppositePair(event.reputation_history_type) && !event.Cancelled) {
         const oppositeVote = VoteOppositePairs[event.reputation_history_type];
         const matchedEvents = targetBucket.filter(e =>
             oppositeVote === e.reputation_history_type

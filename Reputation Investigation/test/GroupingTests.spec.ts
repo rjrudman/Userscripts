@@ -16,6 +16,18 @@ describe('Grouping', () => {
         expect(events[2]).to.include({ ...payload[2], BucketIndex: 0 });
     });
 
+    it('u1-u1-uu1 should be grouped for the same post', () => {
+        const payload = [
+            upvote(1), upvote(1), unupvote(1)
+        ];
+
+        const events = processBucketsThirtySeconds(payload);
+        expect(events.length).to.equal(3);
+        expect(events[0]).to.include({ ...payload[0], Cancelled: true, BucketIndex: 0 });
+        expect(events[1]).to.include({ ...payload[1], Cancelled: false, BucketIndex: 0 });
+        expect(events[2]).to.include({ ...payload[2], Cancelled: true, BucketIndex: 0 });
+    });
+
     it('u1-uu1-uu1 should not be grouped', () => {
         const payload = [
             upvote(1), unupvote(1), unupvote(1)

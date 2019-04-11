@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Reputation Investigation
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
-// @version      2.0.3
+// @version      2.0.4
 // @author       Rob
 // @match        *://*.stackexchange.com/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
@@ -982,7 +982,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             && !EventTypes_1.HasOppositePair(event.reputation_history_type)) {
             return false;
         }
-        if (EventTypes_1.HasOppositePair(event.reputation_history_type)) {
+        if (EventTypes_1.HasOppositePair(event.reputation_history_type) && !event.Cancelled) {
             var oppositeVote_1 = EventTypes_1.VoteOppositePairs[event.reputation_history_type];
             if (targetBucket.some(function (e) {
                 return oppositeVote_1 === e.reputation_history_type
@@ -1013,7 +1013,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         return true;
     }
     function MergeToBucket(targetBucket, sourceBucket, event) {
-        if (EventTypes_1.HasOppositePair(event.reputation_history_type)) {
+        if (EventTypes_1.HasOppositePair(event.reputation_history_type) && !event.Cancelled) {
             var oppositeVote_2 = EventTypes_1.VoteOppositePairs[event.reputation_history_type];
             var matchedEvents = targetBucket.filter(function (e) {
                 return oppositeVote_2 === e.reputation_history_type
