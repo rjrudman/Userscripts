@@ -115,11 +115,11 @@ $(() => {
         const tabSelectedRegex = /&sort=detailed/;
 
         function addUiItems() {
-            const detailedLink = $(`<a href="/users/${userId}?tab=reputation&amp;sort=detailed">detailed</a>`);
+            const detailedLink = $(`<a class="s-btn s-btn__muted s-btn__outlined s-btn__xs js-user-tab-sort" href="/users/${userId}?tab=reputation&amp;sort=detailed">Detailed</a>`);
 
             if (window.location.href.match(tabSelectedRegex)) {
-                $('.user-tab-sorts a').removeClass('youarehere');
-                $(detailedLink).addClass('youarehere');
+                $('.js-user-tab-sorts a').removeClass('is-selected');
+                $(detailedLink).addClass('is-selected');
 
                 $('#stats').prepend('<div id="rep-page-summary">');
 
@@ -155,7 +155,7 @@ $(() => {
                 setTimeout(() => { addUiItems(); });
             });
 
-            $('.user-tab-sorts').append(detailedLink);
+            $('.js-user-tab-sorts').append(detailedLink);
         }
         addUiItems();
 
