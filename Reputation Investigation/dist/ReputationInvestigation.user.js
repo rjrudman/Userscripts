@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Reputation Investigation
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
-// @version      2.0.4
+// @version      2.1.5
 // @author       Rob
 // @match        *://*.stackexchange.com/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
@@ -505,10 +505,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var userId = StackExchange.user.options.userId;
             var tabSelectedRegex = /&sort=detailed/;
             function addUiItems() {
-                var detailedLink = $("<a href=\"/users/" + userId + "?tab=reputation&amp;sort=detailed\">detailed</a>");
+                var detailedLink = $("<a class=\"s-btn s-btn__muted s-btn__outlined s-btn__xs js-user-tab-sort\" href=\"/users/" + userId + "?tab=reputation&amp;sort=detailed\">Detailed</a>");
                 if (window.location.href.match(tabSelectedRegex)) {
-                    $('.user-tab-sorts a').removeClass('youarehere');
-                    $(detailedLink).addClass('youarehere');
+                    $('.js-user-tab-sorts a').removeClass('is-selected');
+                    $(detailedLink).addClass('is-selected');
                     $('#stats').prepend('<div id="rep-page-summary">');
                     RenderDetailedReputation(45, 3);
                     var linkToXref = $("<a style=\"margin-left: 10px\" href=\"https://stackoverflow.com/admin/xref-user-ips/" + userId + "\" target=\"_blank\">xref</a>");
@@ -535,7 +535,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 detailedLink.bind('destroyed', function () {
                     setTimeout(function () { addUiItems(); });
                 });
-                $('.user-tab-sorts').append(detailedLink);
+                $('.js-user-tab-sorts').append(detailedLink);
             }
             addUiItems();
             function RenderDetailedReputation(secondsGap, bucketSize) {
