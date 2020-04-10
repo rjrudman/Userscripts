@@ -220,7 +220,7 @@ $(() => {
                     }
                     const htmlRow = $(`
                     <tr>
-                        <td>${moment.unix(event.creation_date).format('YYYY-MM-DD HH:mm:ss')}</td>
+                        <td>${moment.unix(event.creation_date).utc().format('YYYY-MM-DD HH:mm:ss')}</td>
                         <td>${event.reputation_history_type}</td>
                         <td id="rep-change" class="rep-change ${repChangeClass}">${event.reputation_change >= 0 ? '+' : ''}${event.reputation_change}</td>
                         <td class="post-col"><a href="/q/${event.post_id}">${event.title || (event.post_id + ' (deleted)')}</a><a class="post-matcher" href="javascript:void(0);">📌</a></td>
