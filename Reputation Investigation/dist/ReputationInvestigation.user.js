@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Reputation Investigation
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
-// @version      2.1.5
+// @version      2.1.6
 // @author       Rob
 // @match        *://*.stackexchange.com/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
@@ -586,7 +586,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         else {
                             repChangeClass = 'rep-change-negative';
                         }
-                        var htmlRow = $("\n                    <tr>\n                        <td>" + moment.unix(event_1.creation_date).format('YYYY-MM-DD HH:mm:ss') + "</td>\n                        <td>" + event_1.reputation_history_type + "</td>\n                        <td id=\"rep-change\" class=\"rep-change " + repChangeClass + "\">" + (event_1.reputation_change >= 0 ? '+' : '') + event_1.reputation_change + "</td>\n                        <td class=\"post-col\"><a href=\"/q/" + event_1.post_id + "\">" + (event_1.title || (event_1.post_id + ' (deleted)')) + "</a><a class=\"post-matcher\" href=\"javascript:void(0);\">\uD83D\uDCCC</a></td>\n                        <td class=\"reversal-type\"></td>\n                    </tr>\n                    ");
+                        var htmlRow = $("\n                    <tr>\n                        <td>" + moment.unix(event_1.creation_date).utc().format('YYYY-MM-DD HH:mm:ss') + "</td>\n                        <td>" + event_1.reputation_history_type + "</td>\n                        <td id=\"rep-change\" class=\"rep-change " + repChangeClass + "\">" + (event_1.reputation_change >= 0 ? '+' : '') + event_1.reputation_change + "</td>\n                        <td class=\"post-col\"><a href=\"/q/" + event_1.post_id + "\">" + (event_1.title || (event_1.post_id + ' (deleted)')) + "</a><a class=\"post-matcher\" href=\"javascript:void(0);\">\uD83D\uDCCC</a></td>\n                        <td class=\"reversal-type\"></td>\n                    </tr>\n                    ");
                         if (event_1.reputation_history_type === 'association_bonus') {
                             htmlRow.find('.post-col').empty();
                         }
