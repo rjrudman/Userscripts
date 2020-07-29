@@ -3,13 +3,22 @@
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
 // @version      2.1.6
 // @author       Rob
-// @match        *://*.stackexchange.com/*/*?tab=reputation*
+// @match        *://*.stackexchange.com/users/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
-// @match        *://*.superuser.com/*/*?tab=reputation*
-// @match        *://*.serverfault.com/*/*?tab=reputation*
-// @match        *://*.askubuntu.com/*/*?tab=reputation*
-// @match        *://*.stackapps.com/*/*?tab=reputation*
-// @match        *://*.mathoverflow.net/*/*?tab=reputation*
+// @match        *://*.superuser.com/users/*/*?tab=reputation*
+// @match        *://*.serverfault.com/users/*/*?tab=reputation*
+// @match        *://*.askubuntu.com/users/*/*?tab=reputation*
+// @match        *://*.stackapps.com/users/*/*?tab=reputation*
+// @match        *://*.mathoverflow.net/users/*/*?tab=reputation*
+
+// @match        *://*.stackexchange.com/users/account-info/*
+// @match        *://*.stackoverflow.com/users/account-info/*
+// @match        *://*.superuser.com/users/account-info/*
+// @match        *://*.serverfault.com/users/account-info/*
+// @match        *://*.askubuntu.com/users/account-info/*
+// @match        *://*.stackapps.com/users/account-info/*
+// @match        *://*.mathoverflow.net/users/account-info/*
+
 // @exclude      *://chat.stackexchange.com/*
 // @exclude      *://chat.meta.stackexchange.com/*
 // @exclude      *://chat.stackoverflow.com/*
@@ -503,10 +512,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
         };
         StackExchange.initialized.then(function () {
             var userId = StackExchange.user.options.userId;
+            var reputationPageLink = /tab=reputation/;
             var tabSelectedRegex = /&sort=detailed/;
             function addUiItems() {
                 var detailedLink = $("<a class=\"s-btn s-btn__muted s-btn__outlined s-btn__xs js-user-tab-sort\" href=\"/users/" + userId + "?tab=reputation&amp;sort=detailed\">Detailed</a>");
-                if (window.location.href.match(tabSelectedRegex)) {
+                var initialize = function () {
                     $('.js-user-tab-sorts a').removeClass('is-selected');
                     $(detailedLink).addClass('is-selected');
                     $('#stats').prepend('<div id="rep-page-summary">');
@@ -517,25 +527,41 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         $('#stats').prepend(linkToXref);
                         $('#stats').prepend(linkToVotes);
                     }
-                    var bucketSizeInput_1 = $('<input type="number" value="3" />');
-                    $('#stats').prepend(bucketSizeInput_1);
+                    var bucketSizeInput = $('<input type="number" value="3" />');
+                    $('#stats').prepend(bucketSizeInput);
                     $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Minimum number of votes</label>');
-                    var numSecondsInput_1 = $('<input type="number" value="45" />');
-                    $('#stats').prepend(numSecondsInput_1);
+                    var numSecondsInput = $('<input type="number" value="45" />');
+                    $('#stats').prepend(numSecondsInput);
                     $('#stats').prepend('<label style="margin-right: 15px;">Number of seconds between votes</label>');
                     var onChange = function () {
-                        var numSeconds = parseInt(numSecondsInput_1.val(), 10);
-                        var bucketSize = parseInt(bucketSizeInput_1.val(), 10);
+                        var numSeconds = parseInt(numSecondsInput.val(), 10);
+                        var bucketSize = parseInt(bucketSizeInput.val(), 10);
                         RenderDetailedReputation(numSeconds, bucketSize);
                     };
-                    numSecondsInput_1.change(onChange);
-                    bucketSizeInput_1.change(onChange);
+                    numSecondsInput.change(onChange);
+                    bucketSizeInput.change(onChange);
+                };
+                if (window.location.href.match(tabSelectedRegex)) {
+                    initialize();
+                }
+                if (window.location.href.match(reputationPageLink)) {
+                    $('.js-user-tab-sorts').append(detailedLink);
+                }
+                else {
+                    var initSocky_1 = function () {
+                        if (!$('#rep-page-container').length) {
+                            setTimeout(initSocky_1, 500);
+                        }
+                        else {
+                            initialize();
+                        }
+                    };
+                    initSocky_1();
                 }
                 // SE destroys the tab when swapping. Watch for that, and add back our UI items.
                 detailedLink.bind('destroyed', function () {
                     setTimeout(function () { addUiItems(); });
                 });
-                $('.js-user-tab-sorts').append(detailedLink);
             }
             addUiItems();
             function RenderDetailedReputation(secondsGap, bucketSize) {

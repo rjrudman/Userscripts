@@ -3,13 +3,22 @@
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
 // @version      2.1.6
 // @author       Rob
-// @match        *://*.stackexchange.com/*/*?tab=reputation*
+// @match        *://*.stackexchange.com/users/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
-// @match        *://*.superuser.com/*/*?tab=reputation*
-// @match        *://*.serverfault.com/*/*?tab=reputation*
-// @match        *://*.askubuntu.com/*/*?tab=reputation*
-// @match        *://*.stackapps.com/*/*?tab=reputation*
-// @match        *://*.mathoverflow.net/*/*?tab=reputation*
+// @match        *://*.superuser.com/users/*/*?tab=reputation*
+// @match        *://*.serverfault.com/users/*/*?tab=reputation*
+// @match        *://*.askubuntu.com/users/*/*?tab=reputation*
+// @match        *://*.stackapps.com/users/*/*?tab=reputation*
+// @match        *://*.mathoverflow.net/users/*/*?tab=reputation*
+
+// @match        *://*.stackexchange.com/users/account-info/*
+// @match        *://*.stackoverflow.com/users/account-info/*
+// @match        *://*.superuser.com/users/account-info/*
+// @match        *://*.serverfault.com/users/account-info/*
+// @match        *://*.askubuntu.com/users/account-info/*
+// @match        *://*.stackapps.com/users/account-info/*
+// @match        *://*.mathoverflow.net/users/account-info/*
+
 // @exclude      *://chat.stackexchange.com/*
 // @exclude      *://chat.meta.stackexchange.com/*
 // @exclude      *://chat.stackoverflow.com/*

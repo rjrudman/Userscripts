@@ -112,12 +112,13 @@ $(() => {
 
     StackExchange.initialized.then(() => {
         const userId = StackExchange.user.options.userId;
+        const reputationPageLink = /tab=reputation/;
         const tabSelectedRegex = /&sort=detailed/;
 
         function addUiItems() {
             const detailedLink = $(`<a class="s-btn s-btn__muted s-btn__outlined s-btn__xs js-user-tab-sort" href="/users/${userId}?tab=reputation&amp;sort=detailed">Detailed</a>`);
 
-            if (window.location.href.match(tabSelectedRegex)) {
+            const initialize = () => {
                 $('.js-user-tab-sorts a').removeClass('is-selected');
                 $(detailedLink).addClass('is-selected');
 
@@ -148,14 +149,28 @@ $(() => {
 
                 numSecondsInput.change(onChange);
                 bucketSizeInput.change(onChange);
+            };
+
+            if (window.location.href.match(tabSelectedRegex)) {
+                initialize();
+            }
+            if (window.location.href.match(reputationPageLink)) {
+                $('.js-user-tab-sorts').append(detailedLink);
+            } else {
+                const initSocky = () => {
+                    if (!$('#rep-page-container').length) {
+                        setTimeout(initSocky, 500);
+                    } else {
+                        initialize();
+                    }
+                };
+                initSocky();
             }
 
             // SE destroys the tab when swapping. Watch for that, and add back our UI items.
             detailedLink.bind('destroyed', () => {
                 setTimeout(() => { addUiItems(); });
             });
-
-            $('.js-user-tab-sorts').append(detailedLink);
         }
         addUiItems();
 
