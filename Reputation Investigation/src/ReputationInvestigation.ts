@@ -121,25 +121,28 @@ $(() => {
             const initialize = () => {
                 $('.js-user-tab-sorts a').removeClass('is-selected');
                 $(detailedLink).addClass('is-selected');
+                
+                const container = $('#rep-page-container');
 
-                $('#stats').prepend('<div id="rep-page-summary">');
+                container.empty();
+                container.prepend('<div id="rep-page-summary">');
 
                 RenderDetailedReputation(45, 3);
 
                 const linkToXref = $(`<a style="margin-left: 10px" href="https://stackoverflow.com/admin/xref-user-ips/${userId}" target="_blank">xref</a>`);
                 const linkToVotes = $(`<a style="margin-left: 10px" href="https://stackoverflow.com/admin/show-user-votes/${userId}" target="_blank">votes</a>`);
                 if (StackExchange.options.user.isModerator) {
-                    $('#stats').prepend(linkToXref);
-                    $('#stats').prepend(linkToVotes);
+                    container.prepend(linkToXref);
+                    container.prepend(linkToVotes);
                 }
 
-                const bucketSizeInput = $('<input type="number" value="3" />');
-                $('#stats').prepend(bucketSizeInput);
-                $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Minimum number of votes</label>');
+                const bucketSizeInput = $('<input type="number" value="3" style="padding: 5px 4px; width: 10em" />');
+                container.prepend(bucketSizeInput);
+                container.prepend('<label style="margin-right: 15px; margin-left: 15px;">Minimum number of votes</label>');
 
-                const numSecondsInput = $('<input type="number" value="45" />');
-                $('#stats').prepend(numSecondsInput);
-                $('#stats').prepend('<label style="margin-right: 15px;">Number of seconds between votes</label>');
+                const numSecondsInput = $('<input type="number" value="45" style="padding: 5px 4px; width: 10em" />');
+                container.prepend(numSecondsInput);
+                container.prepend('<label style="margin-right: 15px;">Number of seconds between votes</label>');
 
                 const onChange = () => {
                     const numSeconds = parseInt(numSecondsInput.val(), 10);
@@ -158,7 +161,7 @@ $(() => {
                 $('.js-user-tab-sorts').append(detailedLink);
             } else {
                 const initSocky = () => {
-                    if (!$('#rep-page-container').length) {
+                    if (!container.length) {
                         setTimeout(initSocky, 500);
                     } else {
                         initialize();
@@ -176,12 +179,12 @@ $(() => {
 
         function RenderDetailedReputation(secondsGap: number, bucketSize: number) {
             const repPageContainer = $('#rep-page-container');
-            repPageContainer.empty();
+            repPageContainer.find('.detailed_reputation_table').remove();
 
             const repPageSummary = $('#rep-page-summary');
             repPageSummary.empty();
 
-            const footerContainer = $('.user-tab-footer');
+            const footerContainer = $('.js-user-tab-paging');
             footerContainer.empty();
 
             const apiData = GetCurrentReputationPage(userId);
@@ -206,6 +209,7 @@ $(() => {
                     loadMoreData.click(() => {
                         loadMoreData.hide();
                         GetNextReputationPage(userId).then(() => RenderDetailedReputation(secondsGap, bucketSize));
+                        return false;
                     });
                     footerContainer.append(loadMoreData);
                 }
