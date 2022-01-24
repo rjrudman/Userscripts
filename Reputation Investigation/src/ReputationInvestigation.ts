@@ -17,7 +17,7 @@ const css = `
 }
 
 .detailed_reputation_table tr:nth-child(even) {
-    background-color: #f2f2f2;
+    background-color: var(--black-025);
 }
 
 .detailed_reputation_table_header {
