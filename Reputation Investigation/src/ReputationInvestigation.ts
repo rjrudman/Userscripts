@@ -115,6 +115,8 @@ $(() => {
         const reputationPageLink = /tab=reputation/;
         const tabSelectedRegex = /&sort=detailed/;
 
+        const container = $('#rep-page-container');
+
         function addUiItems() {
             const detailedLink = $(`<a class="s-btn s-btn__muted s-btn__outlined s-btn__xs js-user-tab-sort" href="/users/${userId}?tab=reputation&amp;sort=detailed">Detailed</a>`);
 
@@ -122,8 +124,6 @@ $(() => {
                 $('.js-user-tab-sorts a').removeClass('is-selected');
                 $(detailedLink).addClass('is-selected');
                 
-                const container = $('#rep-page-container');
-
                 container.empty();
                 container.prepend('<div id="rep-page-summary">');
 

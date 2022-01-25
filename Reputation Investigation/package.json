@@ -25,7 +25,6 @@
     "uglifyjs-webpack-plugin": "^2.1.2",
     "unminified-webpack-plugin": "2.0.0",
     "webpack": "4.29.6",
-    "webpack-cli": "^3.3.0"
-  },
-  "dependencies": {}
+    "webpack-cli": "^3.3.12"
+  }
 }

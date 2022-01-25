@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Reputation Investigation
 // @namespace    https://github.com/rjrudman/Userscripts/ReputationInvestigation
-// @version      2.2.0
+// @version      2.2.1
 // @author       Rob
 // @match        *://*.stackexchange.com/users/*/*?tab=reputation*
 // @match        *://*.stackoverflow.com/users/*/*?tab=reputation*
@@ -480,7 +480,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(0), __webpack_require__(2), __webpack_require__(4), __webpack_require__(5), __webpack_require__(1)], __WEBPACK_AMD_DEFINE_RESULT__ = (function (require, exports, tslib_1, Tools_1, ReputationApi_1, EventProcessor_1, EventTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var css = "\n.detailed_reputation_table {\n    width: 100%;\n    font-size: 10px;\n}\n\n.detailed_reputation_table td {\n    padding: 5px;\n}\n\n.detailed_reputation_table tr:nth-child(even) {\n    background-color: #f2f2f2;\n}\n\n.detailed_reputation_table_header {\n    font-size: 12px;\n    border-top: 1px solid black;\n}\n\n.post-matcher {\n    opacity: 0;\n    padding-left: 5px;\n}\n\n.detailed_reputation_table tr > td.post-col:hover .post-matcher,\n.detailed_reputation_table_highlighted .post-matcher {\n    opacity: 1;\n}\n\n.user-details-div {\n    display: inline;\n    margin-left: 15px;\n}\n.user-details-div a {\n    margin-left: 5px;\n}\n\n.summary-table {\n    width: 100%;\n    margin: 5px;\n    font-size: 15px;\n}\n\n.summary-table p {\n    color: red;\n    display: inline;\n}\n\n.reversal-type {\n    cursor: default;\n}\n\n.rep-change {\n    font-size: 12px;\n    font-weight: bold;\n}\n.rep-change-positive {\n    color: green;\n}\n.rep-change-negative {\n    color: red;\n}\n#detailed_reputation_body > tr.reversal {\n    background-color: rgb(239, 145, 125);\n}\ntr.reversal > td.post-col > a,\ntr.reversal > td.post-col > a:hover {\n    color: #12009e\n}\n";
+    var css = "\n.detailed_reputation_table {\n    width: 100%;\n    font-size: 10px;\n}\n\n.detailed_reputation_table td {\n    padding: 5px;\n}\n\n.detailed_reputation_table tr:nth-child(even) {\n    background-color: var(--black-025);\n}\n\n.detailed_reputation_table_header {\n    font-size: 12px;\n    border-top: 1px solid black;\n}\n\n.post-matcher {\n    opacity: 0;\n    padding-left: 5px;\n}\n\n.detailed_reputation_table tr > td.post-col:hover .post-matcher,\n.detailed_reputation_table_highlighted .post-matcher {\n    opacity: 1;\n}\n\n.user-details-div {\n    display: inline;\n    margin-left: 15px;\n}\n.user-details-div a {\n    margin-left: 5px;\n}\n\n.summary-table {\n    width: 100%;\n    margin: 5px;\n    font-size: 15px;\n}\n\n.summary-table p {\n    color: red;\n    display: inline;\n}\n\n.reversal-type {\n    cursor: default;\n}\n\n.rep-change {\n    font-size: 12px;\n    font-weight: bold;\n}\n.rep-change-positive {\n    color: green;\n}\n.rep-change-negative {\n    color: red;\n}\n#detailed_reputation_body > tr.reversal {\n    background-color: rgb(239, 145, 125);\n}\ntr.reversal > td.post-col > a,\ntr.reversal > td.post-col > a:hover {\n    color: #12009e\n}\n";
     function getBucketColour(index, numBuckets) {
         // If the index is even, we shift it halfway through the bucket count
         // This way, colours will be more contrasted
@@ -514,25 +514,27 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             var userId = StackExchange.user.options.userId;
             var reputationPageLink = /tab=reputation/;
             var tabSelectedRegex = /&sort=detailed/;
+            var container = $('#rep-page-container');
             function addUiItems() {
                 var detailedLink = $("<a class=\"s-btn s-btn__muted s-btn__outlined s-btn__xs js-user-tab-sort\" href=\"/users/" + userId + "?tab=reputation&amp;sort=detailed\">Detailed</a>");
                 var initialize = function () {
                     $('.js-user-tab-sorts a').removeClass('is-selected');
                     $(detailedLink).addClass('is-selected');
-                    $('#stats').prepend('<div id="rep-page-summary">');
+                    container.empty();
+                    container.prepend('<div id="rep-page-summary">');
                     RenderDetailedReputation(45, 3);
                     var linkToXref = $("<a style=\"margin-left: 10px\" href=\"https://stackoverflow.com/admin/xref-user-ips/" + userId + "\" target=\"_blank\">xref</a>");
                     var linkToVotes = $("<a style=\"margin-left: 10px\" href=\"https://stackoverflow.com/admin/show-user-votes/" + userId + "\" target=\"_blank\">votes</a>");
                     if (StackExchange.options.user.isModerator) {
-                        $('#stats').prepend(linkToXref);
-                        $('#stats').prepend(linkToVotes);
+                        container.prepend(linkToXref);
+                        container.prepend(linkToVotes);
                     }
-                    var bucketSizeInput = $('<input type="number" value="3" />');
-                    $('#stats').prepend(bucketSizeInput);
-                    $('#stats').prepend('<label style="margin-right: 15px; margin-left: 15px;">Minimum number of votes</label>');
-                    var numSecondsInput = $('<input type="number" value="45" />');
-                    $('#stats').prepend(numSecondsInput);
-                    $('#stats').prepend('<label style="margin-right: 15px;">Number of seconds between votes</label>');
+                    var bucketSizeInput = $('<input type="number" value="3" style="padding: 5px 4px; width: 10em" />');
+                    container.prepend(bucketSizeInput);
+                    container.prepend('<label style="margin-right: 15px; margin-left: 15px;">Minimum number of votes</label>');
+                    var numSecondsInput = $('<input type="number" value="45" style="padding: 5px 4px; width: 10em" />');
+                    container.prepend(numSecondsInput);
+                    container.prepend('<label style="margin-right: 15px;">Number of seconds between votes</label>');
                     var onChange = function () {
                         var numSeconds = parseInt(numSecondsInput.val(), 10);
                         var bucketSize = parseInt(bucketSizeInput.val(), 10);
@@ -549,7 +551,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                 }
                 else {
                     var initSocky_1 = function () {
-                        if (!$('#rep-page-container').length) {
+                        if (!container.length) {
                             setTimeout(initSocky_1, 500);
                         }
                         else {
@@ -566,10 +568,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
             addUiItems();
             function RenderDetailedReputation(secondsGap, bucketSize) {
                 var repPageContainer = $('#rep-page-container');
-                repPageContainer.empty();
+                repPageContainer.find('.detailed_reputation_table').remove();
                 var repPageSummary = $('#rep-page-summary');
                 repPageSummary.empty();
-                var footerContainer = $('.user-tab-footer');
+                var footerContainer = $('.js-user-tab-paging');
                 footerContainer.empty();
                 var apiData = ReputationApi_1.GetCurrentReputationPage(userId);
                 var highlightedRows = [];
@@ -590,6 +592,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
                         loadMoreData_1.click(function () {
                             loadMoreData_1.hide();
                             ReputationApi_1.GetNextReputationPage(userId).then(function () { return RenderDetailedReputation(secondsGap, bucketSize); });
+                            return false;
                         });
                         footerContainer.append(loadMoreData_1);
                     }
