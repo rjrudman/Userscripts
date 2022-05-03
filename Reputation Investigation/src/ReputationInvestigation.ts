@@ -115,12 +115,12 @@ $(() => {
         const reputationPageLink = /tab=reputation/;
         const tabSelectedRegex = /&sort=detailed/;
 
-        const container = $('#rep-page-container');
-
         function addUiItems() {
             const detailedLink = $(`<a class="s-btn s-btn__muted s-btn__outlined s-btn__xs js-user-tab-sort" href="/users/${userId}?tab=reputation&amp;sort=detailed">Detailed</a>`);
 
             const initialize = () => {
+                const container = $('#rep-page-container');
+
                 $('.js-user-tab-sorts a').removeClass('is-selected');
                 $(detailedLink).addClass('is-selected');
                 
@@ -161,7 +161,7 @@ $(() => {
                 $('.js-user-tab-sorts').append(detailedLink);
             } else {
                 const initSocky = () => {
-                    if (!container.length) {
+                    if (!$('#rep-page-container').length) {
                         setTimeout(initSocky, 500);
                     } else {
                         initialize();
